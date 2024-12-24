@@ -23,8 +23,8 @@
             <div class="flex-1 ml-32 h-screen overflow-y-auto">
                 <!-- Page Header -->
                 @if (isset($header))
-                    <header class="fixed top-0 left-32 w-full bg-white shadow z-10">
-                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <header class="fixed top-0  w-full bg-white shadow ">
+                        <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                             {{ $header }}
                         </div>
                     </header>

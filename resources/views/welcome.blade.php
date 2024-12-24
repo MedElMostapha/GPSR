@@ -14,7 +14,7 @@
 </head>
 <body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
     <!-- Navbar -->
-    <nav class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow">
+    <nav class="bg-gradient-to-r from-gray-200 to-white text-gray-700  shadow">
         <div class="container mx-auto px-6 py-4 md:flex md:justify-between md:items-center">
             <div class="flex justify-between items-center">
                 <a href="#" class="text-2xl font-bold hover:text-gray-300">GPSR</a>
@@ -44,7 +44,7 @@
     </nav>
 
     <!-- Section Hero -->
-    <header class="bg-gradient-to-r from-purple-600 to-blue-500 text-white">
+    <header class="bg-white text-black">
         <div class="container mx-auto px-6 py-12 text-center md:text-left">
             <div class="flex flex-col-reverse items-center md:flex-row">
                 <div class="w-full md:w-1/2">
