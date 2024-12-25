@@ -113,10 +113,10 @@ class="fixed top-0 left-0 h-screen bg-white shadow-lg overflow-y-auto transition
             <i class="fas fa-sign-out-alt"></i>
         </button>
         <span x-show="open" class="mt-2 w-full text-left text-sm text-gray-600 hover:text-gray-800 transition-all duration-300">
-            <x-mary-button wire:click="logout" class="btn-sm text-white bg-red-600 hover:bg-red-500 border-none flex items-center flex-1">
+            <button wire:click="logout" class="btn-sm text-white bg-red-600 hover:bg-red-500 rounded border-none flex items-center flex-1">
                 <i class="fas fa-sign-out-alt"></i>
                 <span class="text-xs">{{ __('Log Out') }}</span>
-            </x-mary-button>
+            </button>
         </span>
     </div>
 </div>

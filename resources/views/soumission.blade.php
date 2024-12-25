@@ -11,7 +11,6 @@
                 <div class="p-6 text-gray-900">
 
                     <livewire:soumission.soumission />
-                    {{-- <livewire:soumission.publications /> --}}
 
                 </div>
             </div>
