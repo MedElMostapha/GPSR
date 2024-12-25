@@ -14,7 +14,8 @@ class Publication extends Model
         'impact_factor',
         'indexation',
         'user_id',
-        'file_path'
+        'file_path',
+        'rib'
     ];
 
     public function user()

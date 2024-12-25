@@ -10,6 +10,8 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+      
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -20,21 +22,24 @@
             <livewire:layout.sidebare class="fixed h-full" />
 
             <!-- Main Content -->
-            <div class="flex-1 ml-32 h-screen overflow-y-auto">
+            <div class="flex-1 ml-35 h-screen  overflow-y-auto">
                 <!-- Page Header -->
                 @if (isset($header))
-                    <header class="fixed top-0  w-full bg-white shadow ">
-                        <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <header class="fixed top-0  w-full bg-white shadow z-10  ">
+                        <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6  lg:px-8">
                             {{ $header }}
                         </div>
                     </header>
                 @endif
 
                 <!-- Page Content -->
-                <main class="pt-[88px] px-4 "> <!-- Adjust padding-top based on the height of the fixed header -->
+                <main class="pt-[88px] pl-40 px-4 "> <!-- Adjust padding-top based on the height of the fixed header -->
                     {{ $slot }}
                 </main>
             </div>
         </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     </body>
 </html>

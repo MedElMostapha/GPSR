@@ -17,10 +17,9 @@ return new class extends Migration
             $table->text('abstract')->nullable();
             $table->date('publication_date');
             $table->string('journal');
-            $table->decimal('impact_factor', 5, 2)->nullable();
-            $table->enum('indexation', ['Scopus', 'Web of Science', 'Other']);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('file_path')->nullable();
+            $table->string('rib')->nullable();
             $table->timestamps();
         });
     }
