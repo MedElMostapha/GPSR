@@ -19,8 +19,11 @@ return new class extends Migration
             $table->string('password');
             $table->string('specialite');
             $table->string("attestation")->nullable();
+            $table->boolean("isValidated")->default(false);
             $table->rememberToken();
             $table->timestamps();
+            $table->charset = 'utf8';
+            $table->collation = 'utf8_unicode_ci';
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
