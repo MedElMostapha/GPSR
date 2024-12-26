@@ -151,8 +151,13 @@ new class extends Component
 
         <!-- Buttons -->
         <div class="flex justify-end sm:col-span-2">
-            <button type="reset" class="btn btn-secondary mr-2">Reset</button>
-            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="reset" class="btn bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset
+                
+            </button>
+            <button type="submit" class="btn text-white">Create
+                <x-spiner />
+
+            </button>
         </div>
     </form>
 </div>

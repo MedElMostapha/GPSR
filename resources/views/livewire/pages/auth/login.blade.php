@@ -66,6 +66,7 @@ new #[Layout('layouts.guest')] class extends Component
 
             <x-primary-button class="ms-3">
                 {{ __('Log in') }}
+               <x-spiner />
             </x-primary-button>
         </div>
     </form>

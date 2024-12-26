@@ -22,18 +22,18 @@
             <livewire:layout.sidebare class="fixed h-full" />
 
             <!-- Main Content -->
-            <div class="flex-1 ml-35 h-screen  overflow-y-auto">
+            <div class="flex-1 ml-62 h-screen  overflow-y-auto">
                 <!-- Page Header -->
                 @if (isset($header))
                     <header class="fixed top-0  w-full bg-white shadow z-10  ">
-                        <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6  lg:px-8">
+                        <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6  lg:px-8">
                             {{ $header }}
                         </div>
                     </header>
                 @endif
 
                 <!-- Page Content -->
-                <main class="pt-[88px] pl-40 px-4 "> <!-- Adjust padding-top based on the height of the fixed header -->
+                <main class="pt-[40px] pl-40 px-4 "> <!-- Adjust padding-top based on the height of the fixed header -->
                     {{ $slot }}
                 </main>
             </div>

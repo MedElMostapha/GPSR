@@ -22,6 +22,7 @@ new #[Layout('layouts.guest')] class extends Component
     public $attestation; // For file upload
     public string $selectedRole = ''; // Bind to the selected role
     public $roles; // Holds available roles
+    public int $currentStep = 1;
 
     /**
      * Mount the component and load available roles.
@@ -78,81 +79,154 @@ new #[Layout('layouts.guest')] class extends Component
         // Redirect to the dashboard
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
+
+
+public function setStep(int $step): void
+{
+    $this->currentStep = $step;
+}
+
+public function nextStep(): void
+{
+    $this->currentStep++;
+}
+
+public function previousStep(): void
+{
+    $this->currentStep--;
+}
 };
 
 
 
 ?>
 <div>
-    <form wire:submit.prevent="register">
-        <!-- Name -->
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
-        </div>
+    <!-- Steps Navigation -->
+    <div class="steps w-full">
+        <button 
+            class="step {{ $currentStep === 1 ? 'step-primary' : '' }}" 
+            wire:click="setStep(1)">
+            {{-- <span class=" text-sm">
 
-        <!-- Specialite -->
-        <div>
-            <x-input-label for="specialite" :value="__('Specialite')" />
-            <x-text-input wire:model="specialite" id="specialite" class="block mt-1 w-full" type="text" name="specialite" required autocomplete="specialite" />
-            <x-input-error :messages="$errors->get('specialite')" class="mt-2" />
-        </div>
+                {{ __('Personal Details') }}
+            </span> --}}
+        </button>
+        <button 
+            class="step {{ $currentStep === 2 ? 'step-primary' : '' }}" 
+            wire:click="setStep(2)">
+            {{-- <span class=" text-sm">
 
-        <!-- Email -->
-        <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+                {{ __('Account Details') }}
+            </span> --}}
+        </button>
+        <button 
+            class="step {{ $currentStep === 3 ? 'step-primary' : '' }}" 
+            wire:click="setStep(3)">
+            {{-- <span class=" text-sm">
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+                {{ __('Role & Attestation') }}
+            </span> --}}
+        </button>
+    </div>
 
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
+    <!-- Step Content -->
+    <form wire:submit.prevent="register" class="mt-4">
+        <!-- Step 1: Personal Details -->
+        @if ($currentStep === 1)
+            <div>
+                <!-- Name -->
+                <div>
+                    <x-input-label for="name" :value="__('Nom')" />
+                    <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
+                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                </div>
 
-        <!-- Roles -->
-        <div>
-            <x-input-label for="role" :value="__('Role')" />
-            <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                <option value="" disabled>{{ __('Select a Role') }}</option>
-                @foreach ($roles as $id => $role)
-                    <option value="{{ $role }}">{{ $role }}</option>
-                @endforeach
-            </select>
-            <x-input-error :messages="$errors->get('selectedRole')" class="mt-2" />
-        </div>
+                <!-- Specialite -->
+                <div class="mt-4">
+                    <x-input-label for="specialite" :value="__('Specialité')" />
+                    <x-text-input wire:model="specialite" id="specialite" class="block mt-1 w-full" type="text" name="specialite" required autocomplete="specialite" />
+                    <x-input-error :messages="$errors->get('specialite')" class="mt-2" />
+                </div>
+            </div>
+        @endif
 
-        <!-- Attestation -->
-        <div class="mt-4" x-show="$wire.selectedRole === 'doctorant'" x-cloak>
-            <label for="attestation" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Attestation') }}</label>
-            <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
-            @error('attestation') 
-                <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
-            @enderror
-        </div>
+        <!-- Step 2: Account Details -->
+        @if ($currentStep === 2)
+            <div>
+                <!-- Email -->
+               
 
-        <!-- Submit Button -->
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}" wire:navigate>
-                {{ __('Already registered?') }}
-            </a>
+                <!-- Password -->
+                <div class="mt-4">
+                    <x-input-label for="password" :value="__('Mot de passe')" />
+                    <x-text-input wire:model="password" id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                </div>
 
-            <x-primary-button class="ms-4">
-                {{ __('Register') }}
-            </x-primary-button>
+                <!-- Confirm Password -->
+                <div class="mt-4">
+                    <x-input-label for="password_confirmation" :value="__('Confirmer le mot de passe')" />
+                    <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
+                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                </div>
+            </div>
+        @endif
+
+        <!-- Step 3: Role & Attestation -->
+        @if ($currentStep === 3)
+            <div>
+
+                <div>
+                    <x-input-label for="email" :value="__('Email')" />
+                    <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
+                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                </div>
+                <!-- Roles -->
+                <div>
+                    <x-input-label for="role" :value="__('Fonction')" />
+                    <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="" disabled>{{ __('Select a Role') }}</option>
+                        @foreach ($roles as $id => $role)
+                            <option value="{{ $role }}">{{ $role }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('selectedRole')" class="mt-2" />
+                </div>
+
+                <!-- Attestation -->
+                <div class="mt-4" x-show="$wire.selectedRole === 'doctorant'" x-cloak>
+                    <label for="attestation" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Attestation') }}</label>
+                    <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
+                    @error('attestation') 
+                        <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
+                    @enderror
+                </div>
+            </div>
+        @endif
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between mt-4">
+            @if ($currentStep > 1)
+                <x-secondary-button wire:click="previousStep">
+                    {{ __('Retoure') }}
+                </x-secondary-button>
+            @endif
+
+            @if ($currentStep < 3)
+                <x-primary-button wire:click="nextStep">
+                    {{ __('Suivant') }}
+                </x-primary-button>
+            @else
+                <x-primary-button type="submit">
+                    {{ __('Enregistrer') }}
+                    <x-spiner />
+
+                </x-primary-button>
+            @endif
         </div>
     </form>
 </div>
+
 
 
 
