@@ -57,7 +57,6 @@ new #[Layout('layouts.guest')] class extends Component
             $filePath = $this->attestation->store('attestations', 'public');
         }
 
-
         // Create the user
         $user = User::create([
             'name' => $this->name,
@@ -66,7 +65,6 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => $validated['password'],
             'attestation' => $filePath,
         ]);
-
 
         // Assign the selected role to the user
         $user->assignRole($this->selectedRole);
@@ -82,8 +80,10 @@ new #[Layout('layouts.guest')] class extends Component
     }
 };
 
+
+
 ?>
-<div wire:ignore>
+<div>
     <form wire:submit.prevent="register">
         <!-- Name -->
         <div>
@@ -121,43 +121,25 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <!-- Roles -->
-        <div x-data="{ selectedRole: '' }">
-            <!-- Role Selection -->
-            <div class="mt-4">
-                <x-input-label for="role" :value="__('Role')" />
-                <select 
-                    x-model="selectedRole" 
-                    id="role" 
-                    class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                >
-                    <option value="" disabled>{{ __('Select a Role') }}</option>
-                    @foreach ($roles as $id => $role)
-                        <option value="{{ $role }}">{{ $role }}</option>
-                    @endforeach
-                </select>
-                <x-input-error :messages="$errors->get('selectedRole')" class="mt-2" />
-            </div>
-        
-            <!-- Attestation (Conditional Display) -->
-            <div 
-                class="mt-4" 
-                x-show="selectedRole === 'doctorant'" 
-                x-cloak
-            >
-                <label for="attestation" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Attestation') }}</label>
-                <input 
-                    type="file" 
-                    id="attestation" 
-                    wire:model="attestation" 
-                    class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-                />
-                @error('attestation') 
-                    <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
-                @enderror
-            </div>
+        <div>
+            <x-input-label for="role" :value="__('Role')" />
+            <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="" disabled>{{ __('Select a Role') }}</option>
+                @foreach ($roles as $id => $role)
+                    <option value="{{ $role }}">{{ $role }}</option>
+                @endforeach
+            </select>
+            <x-input-error :messages="$errors->get('selectedRole')" class="mt-2" />
         </div>
-        
 
+        <!-- Attestation -->
+        <div class="mt-4" x-show="$wire.selectedRole === 'doctorant'" x-cloak>
+            <label for="attestation" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Attestation') }}</label>
+            <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
+            @error('attestation') 
+                <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
+            @enderror
+        </div>
 
         <!-- Submit Button -->
         <div class="flex items-center justify-end mt-4">
@@ -171,6 +153,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
     </form>
 </div>
+
 
 
 
