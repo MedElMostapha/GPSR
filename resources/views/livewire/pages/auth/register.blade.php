@@ -233,7 +233,7 @@ public function previousStep(): void
                 </x-secondary-button>
             @endif
 
-            @if ($currentStep < 3)
+            @if ($currentStep < 4)
                 <x-primary-button wire:click="nextStep">
                     {{ __('Suivant') }}
                 </x-primary-button>
