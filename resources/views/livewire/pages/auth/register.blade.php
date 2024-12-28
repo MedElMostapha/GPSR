@@ -127,6 +127,14 @@ public function previousStep(): void
                 {{ __('Role & Attestation') }}
             </span> --}}
         </button>
+        <button 
+            class="step {{ $currentStep === 4 ? 'step-primary' : '' }}" 
+            wire:click="setStep(4)">
+            {{-- <span class=" text-sm">
+
+                {{ __('Role & Attestation') }}
+            </span> --}}
+        </button>
     </div>
 
     <!-- Step Content -->
@@ -181,11 +189,23 @@ public function previousStep(): void
                     <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
-                <!-- Roles -->
                 <div>
+                    <x-input-label for="telephone" :value="__('Telephone')" />
+                    <x-text-input wire:model="telephone" id="telephone" class="block mt-1 w-full" type="text" name="telephone" required autocomplete="username" />
+                    <x-input-error :messages="$errors->get('telephone')" class="mt-2" />
+                </div>
+               
+            </div>
+        @endif
+
+        @if ($currentStep === 4)
+
+            <div>
+                 <!-- Roles -->
+                 <div>
                     <x-input-label for="role" :value="__('Fonction')" />
                     <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="" disabled>{{ __('Select a Role') }}</option>
+                        <option value="" disabled>{{ __('Selectionner une fonction') }}</option>
                         @foreach ($roles as $id => $role)
                             <option value="{{ $role }}">{{ $role }}</option>
                         @endforeach
@@ -202,6 +222,7 @@ public function previousStep(): void
                     @enderror
                 </div>
             </div>
+            
         @endif
 
         <!-- Navigation Buttons -->

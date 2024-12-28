@@ -24,7 +24,7 @@ x-data="{
 :class="{ 'max-w-62 z-50 ': open, 'max-w-16 z-50': !open }"
 class="fixed top-0 left-0 h-screen bg-white shadow-lg transition-all duration-300 border-r border-gray-200"
 >
-<div class="flex flex-col h-full">
+<div class="flex flex-col h-full  ">
     <!-- Logo -->
     <div class="shrink-0 flex items-center justify-center  bg-white transition-all duration-300">
         <a href="{{ route('dashboard') }}" wire:navigate>
@@ -33,8 +33,8 @@ class="fixed top-0 left-0 h-screen bg-white shadow-lg transition-all duration-30
     </div>
     <hr class="border-t-2 border-gray-200 ">
     <!-- Navigation Links -->
-    <nav class="flex-1 px-4 py-2  overflow-y-auto ">
-        <ul class="space-y-1">
+    <nav class="flex-1 px-4 py-4   overflow-y-auto ">
+        <ul class="space-y-3">
             <li>
                 <x-nav-link
                     :href="route('dashboard')"
