@@ -19,9 +19,10 @@ new #[Layout('layouts.guest')] class extends Component
     public string $specialite = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public $attestation; // For file upload
     public string $selectedRole = ''; // Bind to the selected role
     public $roles; // Holds available roles
+    public $identity_copy; // For identity card upload
+    public $attestation; // For attestation upload
     public int $currentStep = 1;
 
     /**
@@ -44,19 +45,17 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             'specialite' => ['required', 'string', 'max:255'],
-            'attestation' => 'nullable|file|mimes:pdf|max:10240', // File optional
+            'identity_copy' => 'required|file|mimes:pdf,jpeg,png|max:10240', // Identity card required
+            'attestation' => $this->selectedRole === 'doctorant' ? 'required|file|mimes:pdf|max:10240' : 'nullable', // Attestation required for 'doctorant'
             'selectedRole' => ['required', 'exists:roles,name'], // Ensure valid role ID
         ]);
 
+        // Enregistrer les fichiers téléchargés
+        $identityPath = $this->identity_copy->store('identity_copies', 'public');
+        $attestationPath = $this->attestation ? $this->attestation->store('attestations', 'public') : null;
+
         // Hash the password
         $validated['password'] = Hash::make($validated['password']);
-
-        $filePath = null;
-
-        // Handle file upload if provided
-        if ($this->attestation) {
-            $filePath = $this->attestation->store('attestations', 'public');
-        }
 
         // Create the user
         $user = User::create([
@@ -64,7 +63,8 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => $this->email,
             'specialite' => $this->specialite,
             'password' => $validated['password'],
-            'attestation' => $filePath,
+            'identity_copy' => $identityPath,
+            'attestation' => $attestationPath,
         ]);
 
         // Assign the selected role to the user
@@ -80,61 +80,30 @@ new #[Layout('layouts.guest')] class extends Component
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
 
+    public function setStep(int $step): void
+    {
+        $this->currentStep = $step;
+    }
 
-public function setStep(int $step): void
-{
-    $this->currentStep = $step;
+    public function nextStep(): void
+    {
+        $this->currentStep++;
+    }
+
+    public function previousStep(): void
+    {
+        $this->currentStep--;
+    }
 }
-
-public function nextStep(): void
-{
-    $this->currentStep++;
-}
-
-public function previousStep(): void
-{
-    $this->currentStep--;
-}
-};
-
-
-
 ?>
+
 <div>
     <!-- Steps Navigation -->
     <div class="steps w-full">
-        <button 
-            class="step {{ $currentStep === 1 ? 'step-primary' : '' }}" 
-            wire:click="setStep(1)">
-            {{-- <span class=" text-sm">
-
-                {{ __('Personal Details') }}
-            </span> --}}
-        </button>
-        <button 
-            class="step {{ $currentStep === 2 ? 'step-primary' : '' }}" 
-            wire:click="setStep(2)">
-            {{-- <span class=" text-sm">
-
-                {{ __('Account Details') }}
-            </span> --}}
-        </button>
-        <button 
-            class="step {{ $currentStep === 3 ? 'step-primary' : '' }}" 
-            wire:click="setStep(3)">
-            {{-- <span class=" text-sm">
-
-                {{ __('Role & Attestation') }}
-            </span> --}}
-        </button>
-        <button 
-            class="step {{ $currentStep === 4 ? 'step-primary' : '' }}" 
-            wire:click="setStep(4)">
-            {{-- <span class=" text-sm">
-
-                {{ __('Role & Attestation') }}
-            </span> --}}
-        </button>
+        <button class="step {{ $currentStep === 1 ? 'step-primary' : '' }}" wire:click="setStep(1)"></button>
+        <button class="step {{ $currentStep === 2 ? 'step-primary' : '' }}" wire:click="setStep(2)"></button>
+        <button class="step {{ $currentStep === 3 ? 'step-primary' : '' }}" wire:click="setStep(3)"></button>
+        <button class="step {{ $currentStep === 4 ? 'step-primary' : '' }}" wire:click="setStep(4)"></button>
     </div>
 
     <!-- Step Content -->
@@ -162,7 +131,11 @@ public function previousStep(): void
         @if ($currentStep === 2)
             <div>
                 <!-- Email -->
-               
+                <div class="mt-4">
+                    <x-input-label for="email" :value="__('Email')" />
+                    <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
+                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                </div>
 
                 <!-- Password -->
                 <div class="mt-4">
@@ -183,72 +156,51 @@ public function previousStep(): void
         <!-- Step 3: Role & Attestation -->
         @if ($currentStep === 3)
             <div>
-
-                <div>
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                </div>
-                <div>
-                    <x-input-label for="telephone" :value="__('Telephone')" />
-                    <x-text-input wire:model="telephone" id="telephone" class="block mt-1 w-full" type="text" name="telephone" required autocomplete="username" />
-                    <x-input-error :messages="$errors->get('telephone')" class="mt-2" />
-                </div>
-               
-            </div>
-        @endif
-
-        @if ($currentStep === 4)
-
-            <div>
-                 <!-- Roles -->
-                 <div>
-                    <x-input-label for="role" :value="__('Fonction')" />
+                <div class="mt-4">
+                    <x-input-label for="role" :value="__('Rôle')" />
                     <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        <option value="" disabled>{{ __('Selectionner une fonction') }}</option>
+                        <option value="" disabled>{{ __('Sélectionner un rôle') }}</option>
                         @foreach ($roles as $id => $role)
                             <option value="{{ $role }}">{{ $role }}</option>
                         @endforeach
                     </select>
                     <x-input-error :messages="$errors->get('selectedRole')" class="mt-2" />
                 </div>
-
-                <!-- Attestation -->
-                <div class="mt-4" x-show="$wire.selectedRole === 'doctorant'" x-cloak>
-                    <label for="attestation" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Attestation') }}</label>
-                    <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
-                    @error('attestation') 
-                        <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
-                    @enderror
-                </div>
             </div>
-            
+        @endif
+
+        <!-- Step 4: Identity & Attestation -->
+        @if ($currentStep === 4)
+            <div>
+                <!-- Identity Copy -->
+                <div class="mt-4">
+                    <label for="identity_copy" class="block text-sm font-medium text-gray-700">{{ __('Copie de la carte d\'identité') }}</label>
+                    <input type="file" id="identity_copy" wire:model="identity_copy" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
+                    @error('identity_copy') <span class="text-red-500 text-sm mt-2">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Attestation (only for doctorant) -->
+                @if ($selectedRole === 'doctorant')
+                    <div class="mt-4">
+                        <label for="attestation" class="block text-sm font-medium text-gray-700">{{ __('Attestation') }}</label>
+                        <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
+                        @error('attestation') <span class="text-red-500 text-sm mt-2">{{ $message }}</span> @enderror
+                    </div>
+                @endif
+            </div>
         @endif
 
         <!-- Navigation Buttons -->
         <div class="flex justify-between mt-4">
             @if ($currentStep > 1)
-                <x-secondary-button wire:click="previousStep">
-                    {{ __('Retoure') }}
-                </x-secondary-button>
+                <x-secondary-button wire:click="previousStep">{{ __('Retour') }}</x-secondary-button>
             @endif
 
             @if ($currentStep < 4)
-                <x-primary-button wire:click="nextStep">
-                    {{ __('Suivant') }}
-                </x-primary-button>
+                <x-primary-button wire:click="nextStep">{{ __('Suivant') }}</x-primary-button>
             @else
-                <x-primary-button type="submit">
-                    {{ __('Enregistrer') }}
-                    <x-spiner />
-
-                </x-primary-button>
+                <x-primary-button type="submit">{{ __('S\'inscrire') }}</x-primary-button>
             @endif
         </div>
     </form>
 </div>
-
-
-
-
-
