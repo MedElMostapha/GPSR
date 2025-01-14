@@ -9,6 +9,8 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
 
+    public bool $loading = false; // Add a loading state
+
     /**
      * Handle an incoming authentication request.
      */
@@ -16,11 +18,17 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $this->validate();
 
-        $this->form->authenticate();
+        $this->loading = true; // Set loading to true when the login process starts
 
-        Session::regenerate();
+        try {
+            $this->form->authenticate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            Session::regenerate();
+
+            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        } finally {
+            $this->loading = false; // Set loading to false when the process ends
+        }
     }
 }; ?>
 
@@ -64,9 +72,12 @@ new #[Layout('layouts.guest')] class extends Component
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-               <x-spiner />
+            <!-- Login Button with Loading Spinner -->
+            <x-primary-button class="ms-3" wire:loading.attr="disabled" wire:loading.class="opacity-50">
+                <span wire:loading.remove>{{ __('Log in') }}</span>
+                <x-mary-loading wire:loading>
+                    {{-- <x-icon name="loading" class="animate-spin h-5 w-5" /> <!-- Mary UI spinner --> --}}
+                </x-mary-loading>
             </x-primary-button>
         </div>
     </form>

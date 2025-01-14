@@ -11,7 +11,17 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-      
+      <style>
+        /* Add this to your CSS file or <style> tag */
+.step-content {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.step-content.active {
+    opacity: 1;
+}
+      </style>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -40,6 +50,7 @@
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
 
     </body>
 </html>

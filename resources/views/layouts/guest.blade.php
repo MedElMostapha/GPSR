@@ -11,6 +11,18 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <style>
+            /* Add this to your CSS file or <style> tag */
+.step-content {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.step-content.active {
+    opacity: 1;
+}
+        </style>
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -27,6 +39,18 @@
             </div>
         </div>
 
-      
+        <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.on('step-changed', () => {
+                    // Add a small delay to ensure the new step content is rendered
+                    setTimeout(() => {
+                        const activeStep = document.querySelector('.step-content.active');
+                        if (activeStep) {
+                            activeStep.style.opacity = '1';
+                        }
+                    }, 50);
+                });
+            });
+        </script>
     </body>
 </html>
