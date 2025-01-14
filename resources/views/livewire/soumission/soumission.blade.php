@@ -2,7 +2,6 @@
 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-
 new class extends Component
 {
     use WithFileUploads;
@@ -54,6 +53,9 @@ new class extends Component
 
     // Reset input fields
     $this->resetExcept(['indexation']);
+
+    // Redirect to publications page    
+    $this->redirect(route('publication', absolute: false), navigate: true);
 }
 
 

@@ -1,5 +1,5 @@
 <?php
-
+use App\Models\Publication;
 use Livewire\Volt\Component;
 
 new class extends Component {
@@ -11,8 +11,14 @@ new class extends Component {
 
     public function mount()
     {
+
         // Fetch publications for the authenticated user
-        $this->publications = \App\Models\Publication::where('user_id', auth()->id())->latest()->get();
+        $this->publications();
+    }
+
+    public function publications(){
+        $this->publications = auth()->user()->publications()->latest()->get();
+
     }
 
     public function viewFile($fileUrl)
@@ -32,15 +38,18 @@ new class extends Component {
         $this->loading = false; // Set loading to false after publications are loaded
     }
 
-    public function deletePublication($publicationId)
+        public function deletePublication($publicationId)
     {
-        logger("Tentative de suppression de la publication ID: {$publicationId}");
+        // Find the publication by ID
+        $publication = Publication::find($publicationId);
 
-        $publication = \App\Models\Publication::find($publicationId);
-
-        if ($publication && $publication->user_id == auth()->id()) {
+        // Check if the publication exists
+        if ($publication) {
+            // Delete the publication
             $publication->delete();
-            $this->publications = $this->publications->filter(fn ($pub) => $pub->id !== $publicationId);
+
+            // Refresh the publications list
+            $this->publications();
         }
     }
 };
@@ -77,7 +86,7 @@ new class extends Component {
                         
                         <!-- Delete Icon -->
                         <!-- Delete Icon -->
-                        <button onclick="confirmDeletion({{ $publication->id }})" class="text-red-500 hover:text-red-600 transition duration-150">
+                        <button onclick="confirmDeletion({{ $publication->id }})"  class="text-red-500 hover:text-red-600 transition duration-150">
                             <i class="fas fa-trash"></i>
                         </button>
 
@@ -111,18 +120,12 @@ new class extends Component {
         @if ($publications->count() > $visibleCount)
             <div class="text-center mt-6">
                 <!-- Hide the Show More button if loading is true -->
-                    <button wire:click="loadMore" class="btn-primary">
-                        <div class="flex items-center space-x-2">
-                            <div>
-                                <span class="text-sm">Voir plus</span>
-                            </div>
-                            <div wire:loading class="">
-                                <div class="flex justify-center">
-                                    <div class="spinner-border animate-spin border-t-2 border-b-2 border-gray-500 rounded-full w-4 h-4"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </button>
+                <x-secondary-button type="button" wire:click="loadMore" wire:loading.attr="disabled" wire:target="loadMore">
+                    <span wire:loading.remove wire:target="loadMore">{{ __('Plus') }}</span>
+                    <x-mary-loading class=" loading-bars" wire:loading wire:target="loadMore">
+                        {{-- <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div> --}}
+                    </x-mary-loading>
+                </x-secondary-button>
             </div>
         @endif
     @endif
@@ -130,27 +133,25 @@ new class extends Component {
 
 <script>
     function confirmDeletion(publicationId) {
-        Swal.fire({
-            title: 'Êtes-vous sûr ?',
-            text: "Cette action est irréversible !",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Oui, supprimer',
-            cancelButtonText: 'Annuler'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                console.log('====================================');
-                console.log("confirmed");
-                console.log('====================================');
-                Livewire.emit('deletePublication', publicationId);
-                Swal.fire(
-                    'Supprimé !',
-                    'La publication a été supprimée.',
-                    'success'
-                );
-            }
-        });
-    }
+    Swal.fire({
+        title: 'Êtes-vous sûr ?',
+        text: "Cette action est irréversible !",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Oui, supprimer',
+        cancelButtonText: 'Annuler'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Dispatch the Livewire event with the publication ID
+            Livewire.dispatch('deletePublication', { publicationId: publicationId });
+            Swal.fire(
+                'Supprimé !',
+                'La publication a été supprimée.',
+                'success'
+            );
+        }
+    });
+}
 </script>

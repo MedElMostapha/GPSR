@@ -33,12 +33,12 @@
                 @if (Route::has('login'))
                     <div class="space-x-4">
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="hover:underline">Tableau de bord</a>
+                            <a  wire:navigate href="{{ url('/dashboard') }}" class="hover:underline">Tableau de bord</a>
                         @else
-                            <a href="{{ route('login') }}" class="hover:underline">Se connecter</a>
+                            <a  wire:navigate href="{{ route('login') }}" class="hover:underline">Se connecter</a>
 
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="ml-4 hover:underline">S'inscrire</a>
+                                <a  wire:navigate href="{{ route('register') }}" class="ml-4 hover:underline">S'inscrire</a>
                             @endif
                         @endauth
                     </div>
@@ -56,7 +56,7 @@
                     <p class="mt-6 text-lg">Suivez, gérez et archivez efficacement vos publications scientifiques et rapports de séjour avec notre application innovante.</p>
                     <div class="mt-8 flex justify-center md:justify-start">
                         <a href="#features" class="px-6 py-3 text-lg font-semibold bg-white text-purple-600 rounded-lg shadow-md hover:bg-gray-100">En savoir plus</a>
-                        <a href="{{ route('login') }}" class="ml-4 px-6 py-3 text-lg font-semibold bg-purple-800 text-white rounded-lg shadow-md hover:bg-purple-700">Se connecter</a>
+                        <a wire:navigate href="{{ route('login') }}" class="ml-4 px-6 py-3 text-lg font-semibold bg-purple-800 text-white rounded-lg shadow-md hover:bg-purple-700">Se connecter</a>
                     </div>
                 </div>
                 {{-- <div class="w-full md:w-1/2">
