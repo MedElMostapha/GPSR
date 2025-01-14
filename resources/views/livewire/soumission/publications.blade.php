@@ -49,11 +49,12 @@ new class extends Component {
 <div class="p-6 bg-gray-100 min-h-screen">
     @if ($viewingFileUrl)
         <div class="bg-white p-6 rounded-lg shadow-md">
-            @livewire('pdf.pdfviewer', ['fileUrl' => $viewingFileUrl])
-            <button class="mt-4 px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out" 
+            <button class="mb-4 px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out" 
                 wire:click="$set('viewingFileUrl', null)">
-                Back to Publications
+                <i class="fas fa-arrow-left"></i> Retour
             </button>
+            @livewire('pdf.pdfviewer', ['fileUrl' => $viewingFileUrl])
+            
         </div>
     @else
         <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Publications</h1>

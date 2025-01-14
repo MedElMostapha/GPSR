@@ -15,9 +15,13 @@
 <body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
     <!-- Navbar -->
     <nav class="bg-gradient-to-r from-gray-200 to-white text-gray-700  shadow">
-        <div class="container mx-auto px-6 py-4 md:flex md:justify-between md:items-center">
+        <div class="container mx-auto   md:flex md:justify-between md:items-center">
             <div class="flex justify-between items-center">
-                <a href="#" class="text-2xl font-bold hover:text-gray-300">GPSR</a>
+                <a href="/">
+
+                    <x-dash-logo class="w-20 h-20 fill-current text-gray-500" />
+                </a>
+                {{-- <a href="#" class="text-2xl font-bold hover:text-gray-300">GPSR</a> --}}
                 <button type="button" class="text-gray-200 hover:text-gray-300 focus:outline-none md:hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />

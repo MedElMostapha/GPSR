@@ -154,10 +154,12 @@ new class extends Component
             <button type="reset" class="btn bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset
                 
             </button>
-            <button type="submit" class="btn text-white">Create
-                <x-spiner />
-
-            </button>
+            <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="createPublication">
+                <span wire:loading.remove wire:target="createPublication">{{ __('Ajouter') }}</span>
+                <x-mary-loading wire:loading wire:target="createPublication">
+                    {{-- <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div> --}}
+                </x-mary-loading>
+            </x-primary-button>
         </div>
     </form>
 </div>
