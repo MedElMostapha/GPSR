@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Livewire;
+
+use Livewire\Component;
+use Livewire\WithFileUploads;
+use App\Models\Mobilite;
+
+class MobiliteForm extends Component
+{
+    use WithFileUploads;
+
+    public $labo_accueil;
+    public $rapport_mobilite;
+    public $type = 'nationale'; // Par défaut 'nationale'
+    public $ville;
+    public $pays;
+    public $isValidated = false;
+
+    // Etape actuelle du formulaire
+    public $currentStep = 1;
+
+    public function render()
+    {
+        return view('livewire.mobilite-form');
+    }
+
+    public function store()
+    {
+        // Validation et enregistrement
+    }
+
+    public function setStep(int $step)
+    {
+        $this->currentStep = $step;
+    }
+
+    public function nextStep()
+    {
+        $this->currentStep++;
+    }
+
+    public function previousStep()
+    {
+        $this->currentStep--;
+    }
+}
