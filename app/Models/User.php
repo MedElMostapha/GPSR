@@ -49,4 +49,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Publication::class);
     }
+    public function mobilites()
+    {
+        return $this->hasMany(Mobilite::class);
+    }
 }

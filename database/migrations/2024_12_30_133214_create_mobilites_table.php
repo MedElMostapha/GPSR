@@ -21,6 +21,8 @@ class CreateMobilitesTable extends Migration
             $table->string('ville')->nullable(); // Ville (affiché si type 'nationale')
             $table->string('pays')->nullable(); // Pays (affiché si type 'internationale')
             $table->boolean('isValidated')->default(false); // Statut de validation, par défaut 'false'
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+
             $table->timestamps(); // Création des timestamps (created_at, updated_at)
         });
     }

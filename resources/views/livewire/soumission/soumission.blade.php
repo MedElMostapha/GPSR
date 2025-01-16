@@ -2,6 +2,8 @@
 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Livewire\Attributes\On;
+
 new class extends Component
 {
     use WithFileUploads;
@@ -10,56 +12,67 @@ new class extends Component
     public $abstract = '';
     public $publication_date = '';
     public $journal = '';
-    public $file; // For file upload
-    public $rib; // For file upload
+    public $articleFile; // For article file upload
+    public $ribFile; // For RIB file upload
+    public $objects = ['article', 'rib'];
+
+    #[On('file-uploaded')]
+    public function handleFileUpload($event)
+    {
+        if ($event['objet'] == "article") {
+            $this->articleFile = $event['filePath'];
+            // dd($this->articleFile);
+        } elseif ($event['objet'] == "rib") {
+            $this->ribFile = $event['filePath'];
+            // dd($this->ribFile);
+        }
+    }
 
     public function createPublication()
-{
-    // Validate data
-    $this->validate([
-        'title' => 'required|string|max:255',
-        'abstract' => 'nullable|string',
-        'publication_date' => 'required|date',
-        'journal' => 'required|string|max:255',
-        'file' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // File validation
-        'rib' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // File validation
-    ]);
+    {
+        // Validate data
+        $this->validate([
+            'title' => 'required|string|max:255',
+            'abstract' => 'nullable|string',
+            'publication_date' => 'required|date',
+            'journal' => 'required|string|max:255',
+        ]);
 
-    // Handle file upload
-    $filePath = null;
-    
-    if ($this->file) {
-        $filePath = $this->file->store('publications', 'public');
+        // Handle file upload
+        if ($this->articleFile == null) {
+            $this->dispatch("file-required");
+            return;
+        }
+
+        if ($this->ribFile == null) {
+            $this->dispatch("file-required");
+            return;
+        }
+
+        // Create the publication
+        $publication = \App\Models\Publication::create([
+            'title' => $this->title,
+            'abstract' => $this->abstract,
+            'publication_date' => $this->publication_date,
+            'journal' => $this->journal,
+            'user_id' => auth()->id(),
+            'file_path' => $this->articleFile, // Store article file path
+            'rib' => $this->ribFile, // Store RIB file path
+        ]);
+
+        // Flash success message to session
+        session()->flash('message', 'Publication created successfully!');
+
+        // Reset input fields
+        $this->resetExcept(['indexation']);
+
+        $this->dispatch('publicationCreated', [
+            'message' => 'Publication created successfully!'
+        ]);
+
+        // Redirect to publications page    
+        $this->redirect(route('publication', absolute: false), navigate: true);
     }
-
-    $rib = null;
-    if ($this->rib) {
-        $rib = $this->rib->store('rib', 'public');
-    }
-
-    // Create the publication
-    $publication = \App\Models\Publication::create([
-        'title' => $this->title,
-        'abstract' => $this->abstract,
-        'publication_date' => $this->publication_date,
-        'journal' => $this->journal,
-        'user_id' => auth()->id(),
-        'file_path' => $filePath, // Store file path if file uploaded
-        'rib' => $rib, // Store file path if file uploaded
-    ]);
-
-    // Flash success message to session
-    session()->flash('message', 'Publication created successfully!');
-
-    // Reset input fields
-    $this->resetExcept(['indexation']);
-
-    // Redirect to publications page    
-    $this->redirect(route('publication', absolute: false), navigate: true);
-}
-
-
-   
 };
 ?>
 <div class="p-4">
@@ -124,43 +137,25 @@ new class extends Component
         </div>
 
         <!-- File Upload Input -->
-        <div>
-            <label for="file" class="block text-sm font-medium text-gray-700 mb-2">Article</label>
-            <input 
-                type="file" 
-                id="file" 
-                wire:model="file" 
-                class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-            />
-            @error('file') 
-                <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
-            @enderror
-        </div>
-    
-        <!-- RIB File Input -->
-        <div>
-            <label for="rib" class="block text-sm font-medium text-gray-700 mb-2">RIB</label>
-            <input 
-                type="file" 
-                id="rib" 
-                wire:model="rib" 
-                class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-            />
-            @error('rib') 
-                <span class="text-red-500 text-sm mt-2">{{ $message }}</span> 
-            @enderror
-        </div>
+        @foreach ($objects as $index => $objet)
+            <div wire:key="{{ $objet }}-{{ $index }}">
+                <livewire:inputfile 
+                    wire:key="{{ $objet }}-{{ $index }}" 
+                    label="{{ $objet }}" 
+                    location="{{ $objet }}" 
+                    objet="{{ $objet }}" 
+                />  
+            </div>
+        @endforeach
+
+        
 
         <!-- Buttons -->
         <div class="flex justify-end sm:col-span-2">
-            <button type="reset" class="btn bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset
-                
-            </button>
-            <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="createPublication">
+            <button type="reset" class="btn-sm rounded bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset</button>
+            <x-primary-button type="submit" class="btn-sm" wire:loading.attr="disabled" wire:target="createPublication">
                 <span wire:loading.remove wire:target="createPublication">{{ __('Ajouter') }}</span>
-                <x-mary-loading wire:loading wire:target="createPublication">
-                    {{-- <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div> --}}
-                </x-mary-loading>
+                <x-mary-loading wire:loading wire:target="createPublication"></x-mary-loading>
             </x-primary-button>
         </div>
     </form>

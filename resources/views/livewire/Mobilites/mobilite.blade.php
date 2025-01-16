@@ -1,23 +1,23 @@
 <?php
-use App\Models\Publication;
-use Livewire\Volt\Component;
 
+use Livewire\Volt\Component;
+use App\Models\Mobilite;
 new class extends Component {
-    public $publications;
+    public $mobilites;
     public $visibleCount = 6; // Number of publications to show initially
     public $viewingFileUrl = null;
     public $loading = false; // Track loading state
-    protected $listeners = ['deletePublication'];
+    protected $listeners = ['deleteMobilitie'];
 
     public function mount()
     {
 
         // Fetch publications for the authenticated user
-        $this->publications();
+        $this->mobilites();
     }
 
-    public function publications(){
-        $this->publications = auth()->user()->publications()->latest()->get();
+    public function mobilites(){
+        $this->mobilites = auth()->user()->mobilites()->latest()->get();
 
     }
 
@@ -52,7 +52,23 @@ new class extends Component {
             $this->publications();
         }
     }
-};
+
+    public function deleteMobilitie($mobilitieId)
+    {
+        // Find the publication by ID
+        $mobilitie = Mobilite::find($mobilitieId);
+
+        // Check if the publication exists
+        if ($mobilitie) {
+            // Delete the publication
+            $mobilitie->delete();
+
+            // Refresh the publications list
+            $this->mobilites();
+        }
+    }
+
+}; 
 ?>
 
 <div class="p-6 bg-gray-100 min-h-screen">
@@ -66,57 +82,53 @@ new class extends Component {
             
         </div>
     @else
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Publications</h1>
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Mobilités</h1>
 
         <!-- Publications list -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach ($publications->take($visibleCount) as $publication)
+            @foreach ($mobilites->take($visibleCount) as $mobilite)
                 <div class="card bg-white shadow-lg rounded-lg p-5 hover:shadow-xl z-0 transition duration-200 relative">
                     <!-- Top right icons -->
                     <div class="absolute top-2 right-2 flex space-x-2">
                         <!-- Edit Icon -->
-                        <button wire:click="editPublication({{ $publication->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
+                        <button wire:click="editPublication({{ $mobilite->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
                             <i class="fas fa-edit"></i>
                         </button>
                         
                         <!-- Archive Icon -->
-                        <button wire:click="archivePublication({{ $publication->id }})" class="text-yellow-500 hover:text-yellow-600 transition duration-150">
+                        <button wire:click="archivePublication({{ $mobilite->id }})" class="text-yellow-500 hover:text-yellow-600 transition duration-150">
                             <i class="fas fa-archive"></i>
                         </button>
                         
                         <!-- Delete Icon -->
                         <!-- Delete Icon -->
-                        <button onclick="confirmDeletion({{ $publication->id }})"  class="text-red-500 hover:text-red-600 transition duration-150">
+                        <button onclick="confirmDeletion({{ $mobilite->id }})"  class="text-red-500 hover:text-red-600 transition duration-150">
                             <i class="fas fa-trash"></i>
                         </button>
 
                     </div>
                     
                     <!-- Publication Content -->
-                    <h2 class="font-bold text-xl text-gray-800 mb-2">{{ $publication->title }}</h2>
-                    <p class="text-sm text-gray-600">{{ $publication->journal }}</p>
-                    <p class="text-sm text-gray-600">{{ $publication->publication_date }}</p>
-                    <p class="text-sm mt-3 text-gray-700 leading-snug">{{ Str::words($publication->abstract, 20, " ...") }}</p>
+                    <h2 class="font-bold text-xl text-gray-800 mb-2">{{ $mobilite->labo_accueil }}</h2>
+                    <p class="text-sm text-gray-600">{{ $mobilite->type }}</p>
+                    <p class="text-sm text-gray-600">{{ $mobilite->ville }}</p>
+                    <p class="text-sm mt-3 text-gray-700 leading-snug">{{ $mobilite->pays }}</p>
+
                     <div class="mt-4 space-y-3">
-                        @if ($publication->file_path)
+                        @if ($mobilite->rapport_mobilite)
                             <div class="flex items-center text-blue-500 text-sm hover:text-blue-600 transition duration-150 cursor-pointer" 
-                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->file_path)) }}')">
+                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $mobilite->rapport_mobilite)) }}')">
                                 <i class="fas fa-file-pdf mr-2"></i> Voir l'article
                             </div>
                         @endif
-                        @if ($publication->rib)
-                            <div class="flex items-center text-green-500 text-sm hover:text-green-600 transition duration-150 cursor-pointer" 
-                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->rib)) }}')">
-                                <i class="fas fa-file-invoice mr-2"></i> Voir RIB
-                            </div>
-                        @endif
+                       
                     </div>
                 </div>
             @endforeach
         </div>
 
         <!-- Show More Button -->
-        @if ($publications->count() > $visibleCount)
+        @if ($mobilites->count() > $visibleCount)
             <div class="text-center mt-6">
                 <!-- Hide the Show More button if loading is true -->
                 <x-secondary-button type="button" wire:click="loadMore" wire:loading.attr="disabled" wire:target="loadMore">
@@ -131,7 +143,7 @@ new class extends Component {
 </div>
 
 <script>
-    function confirmDeletion(publicationId) {
+    function confirmDeletion(mobiliteId) {
     Swal.fire({
         title: 'Êtes-vous sûr ?',
         text: "Cette action est irréversible !",
@@ -144,15 +156,18 @@ new class extends Component {
     }).then((result) => {
         if (result.isConfirmed) {
             // Dispatch the Livewire event with the publication ID
-            Livewire.dispatch('deletePublication', { publicationId: publicationId });
+            Livewire.dispatch('deleteMobilitie', { mobilitieId: mobiliteId });
             Swal.fire({
                 title: 'Supprimé !',
-                text: 'La publication a été supprimée.',
+                text: 'La mobilité a été supprimée.',
                 icon: 'success',
                 showConfirmButton: false,
                 timer: 1500
                 
-            });
+            }
+                
+
+            );
         }
     });
 }

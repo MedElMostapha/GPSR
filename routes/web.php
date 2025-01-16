@@ -1,9 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\PublicationController;
 
 Route::view('/', 'welcome');
+Route::post('/upload', [FileUploadController::class, 'upload'])->name('file.upload');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -15,6 +17,12 @@ Route::view('soumission', 'soumission')
 Route::view('publication', 'publication')
     ->middleware(['auth', 'verified'])
     ->name('publication');
+Route::view('mobilite', 'mobilite')
+    ->middleware(['auth', 'verified'])
+    ->name('mobilite');
+Route::view('mobilite-create', 'mobilite-create')
+    ->middleware(['auth', 'verified'])
+    ->name('mobilite-create');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

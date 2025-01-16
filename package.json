@@ -18,7 +18,9 @@
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^6.7.2",
+        "country-select-js": "^2.1.0",
         "mary-ui": "^0.0.4",
-        "pspdfkit": "^2024.8.1"
+        "pspdfkit": "^2024.8.1",
+        "toastr": "^2.1.4"
     }
 }

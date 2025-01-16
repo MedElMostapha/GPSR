@@ -1,19 +1,19 @@
-<?php namespace App\Models;
+<?php
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+namespace App\Models;
+
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Mobilite extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'labo_accueil',
-        'rapport_mobilite',
-        'type',
-        'ville',
-        'pays',
-        'isValidated',
-    ];
+    protected $guarded = [];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
-?>

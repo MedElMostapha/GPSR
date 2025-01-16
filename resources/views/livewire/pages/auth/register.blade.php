@@ -9,7 +9,7 @@ use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-
+use Livewire\Attributes\On;
 new #[Layout('layouts.guest')] class extends Component
 {
     use WithFileUploads;
@@ -33,7 +33,30 @@ new #[Layout('layouts.guest')] class extends Component
     public function mount()
     {
         // Load all roles except 'admin'
+        $this->roles();
+    }
+
+
+    public function roles(){
         $this->roles = Role::where('name', '!=', 'admin')->pluck('name', 'id');
+
+    }
+
+    #[On('file-uploaded')]
+    public function handleFileUpload($event)
+    {
+        if($this->identity_copy == null && $event['objet']== 'identite'){
+            $this->identity_copy = $event['filePath'];
+
+        }
+
+        if($this->attestation == null && $event['objet']== 'attestation'){
+            $this->attestation = $event['filePath'];
+
+        }
+
+        // dd($this->file);
+        
     }
 
     /**
@@ -47,18 +70,25 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
             'specialite' => ['required', 'string', 'max:255'],
-            'identity_copy' => 'required|file|mimes:pdf,jpeg,png|max:10240', // Identity card required
-            'attestation' => $this->selectedRole === 'doctorant' ? 'required|file|mimes:pdf|max:10240' : 'nullable', // Attestation required for 'doctorant'
             'selectedRole' => ['required', 'exists:roles,name'], // Ensure valid role ID
         ]);
+
+        if($this->selectedRole === 'doctorant' && $this->attestation == null){
+            $this->dispatch("file-required");
+            return;
+            
+        }
+
+        if($this->identity_copy == null){
+            $this->dispatch("file-required");
+            return;
+        }
 
         // Set loading state to true
         $this->loading = true;
 
         // Store uploaded files
-        $identityPath = $this->identity_copy->store('identity_copies', 'public');
-        $attestationPath = $this->attestation ? $this->attestation->store('attestations', 'public') : null;
-
+     
         // Hash the password
         $validated['password'] = Hash::make($validated['password']);
 
@@ -68,8 +98,8 @@ new #[Layout('layouts.guest')] class extends Component
             'email' => $this->email,
             'specialite' => $this->specialite,
             'password' => $validated['password'],
-            'identity_copy' => $identityPath,
-            'attestation' => $attestationPath,
+            'identity_copy' => $this->identity_copy,
+            'attestation' => $this->attestation,
         ]);
 
         // Assign the selected role to the user
@@ -106,10 +136,16 @@ public function nextStep(): void
             'selectedRole' => ['required', 'exists:roles,name'],
         ]);
     } elseif ($this->currentStep === 4) {
-        $this->validate([
-            'identity_copy' => 'required|file|mimes:pdf,jpeg,png|max:10240',
-            'attestation' => $this->selectedRole === 'doctorant' ? 'required|file|mimes:pdf|max:10240' : 'nullable',
-        ]);
+        if($this->selectedRole === 'doctorant' && $this->attestation == null){
+            $this->dispatch("file-required");
+            return;
+            
+        }
+
+        if($this->identity_copy == null){
+            $this->dispatch("file-required");
+            return;
+        }
     }
 
     // Only proceed to the next step if validation passes
@@ -202,7 +238,7 @@ public function previousStep(): void
                 <div>
                     <div class="mt-4">
                         <x-input-label for="role" :value="__('Rôle')" />
-                        <select wire:model="selectedRole" id="role" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <select wire:model="selectedRole" id="role" class="input block w-full mt-1 bg-white text-black border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="" disabled>{{ __('Sélectionner un rôle') }}</option>
                             @foreach ($roles as $id => $role)
                                 <option value="{{ $role }}">{{ $role }}</option>
@@ -219,18 +255,14 @@ public function previousStep(): void
             @if ($currentStep === 4)
                 <div>
                     <!-- Identity Copy -->
-                    <div class="mt-4">
-                        <label for="identity_copy" class="block text-sm font-medium text-gray-700">{{ __('Copie de la carte d\'identité') }}</label>
-                        <input type="file" id="identity_copy" wire:model="identity_copy" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
-                        @error('identity_copy') <span class="text-red-500 text-sm mt-2">{{ $message }}</span> @enderror
-                    </div>
+                    <livewire:inputfile label="Copie de la carte d'identité"  :location="'identities'" :objet="'identite'" />        <!-- Progress Bar -->
+
 
                     <!-- Attestation (only for doctorant) -->
                     @if ($selectedRole === 'doctorant')
                         <div class="mt-4">
-                            <label for="attestation" class="block text-sm font-medium text-gray-700">{{ __('Attestation') }}</label>
-                            <input type="file" id="attestation" wire:model="attestation" class="block w-full py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out" />
-                            @error('attestation') <span class="text-red-500 text-sm mt-2">{{ $message }}</span> @enderror
+                            <livewire:inputfile label="Attestation"  :location="'attestations'" :objet="'attestation'" />        <!-- Progress Bar -->
+
                         </div>
                     @endif
                 </div>
