@@ -83,7 +83,7 @@ new class extends Component
 };
 ?>
 <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Soumission d'une publication</h1>
+    <h1 class="text-2xl font-bold mb-4">Publier une publication</h1>
 
     <!-- Success message -->
     @if (session()->has('message'))

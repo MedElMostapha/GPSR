@@ -129,6 +129,12 @@ new class extends Component {
         "
     >
         <!-- Drag and Drop Zone -->
+        <div class="w-full ">
+            <span class="text-sm text-gray-600 float-start">
+
+                {{$label}}
+            </span>
+        </div>
         <div 
             class="relative w-full h-20 bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center transition-all duration-300"
             :class="{ 
