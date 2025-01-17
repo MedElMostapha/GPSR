@@ -15,7 +15,11 @@ class Publication extends Model
         'indexation',
         'user_id',
         'file_path',
-        'rib'
+        'rib',
+        'file_name',
+        'rib_name',
+        'isArchived',
+        'isPublished'
     ];
 
     public function user()
@@ -26,6 +30,10 @@ class Publication extends Model
     public function authors()
     {
         return $this->hasMany(Author::class);
+    }
+    public function scopeWhereNotIsArchived($query)
+    {
+        return $query->where('isArchived', false);
     }
 
     public function bonuses()

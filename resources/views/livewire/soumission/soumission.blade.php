@@ -13,7 +13,9 @@ new class extends Component
     public $publication_date = '';
     public $journal = '';
     public $articleFile; // For article file upload
+    public $file_name;
     public $ribFile; // For RIB file upload
+    public $rib_name;
     public $objects = ['article', 'rib'];
 
     #[On('file-uploaded')]
@@ -21,9 +23,12 @@ new class extends Component
     {
         if ($event['objet'] == "article") {
             $this->articleFile = $event['filePath'];
-            // dd($this->articleFile);
+            $this->file_name = $event['fileName'];
+
+            // dd($this->file_name);
         } elseif ($event['objet'] == "rib") {
             $this->ribFile = $event['filePath'];
+            $this->rib_name = $event['fileName'];
             // dd($this->ribFile);
         }
     }
@@ -34,7 +39,6 @@ new class extends Component
         $this->validate([
             'title' => 'required|string|max:255',
             'abstract' => 'nullable|string',
-            'publication_date' => 'required|date',
             'journal' => 'required|string|max:255',
         ]);
 
@@ -49,15 +53,18 @@ new class extends Component
             return;
         }
 
+        // dd($this->file_name, $this->rib_name);
+
         // Create the publication
         $publication = \App\Models\Publication::create([
             'title' => $this->title,
             'abstract' => $this->abstract,
-            'publication_date' => $this->publication_date,
             'journal' => $this->journal,
             'user_id' => auth()->id(),
             'file_path' => $this->articleFile, // Store article file path
             'rib' => $this->ribFile, // Store RIB file path
+            'file_name' => $this->file_name,
+            'rib_name' => $this->rib_name
         ]);
 
         // Flash success message to session
@@ -102,56 +109,50 @@ new class extends Component
     @endif
 
     <!-- Form -->
-    <form wire:submit.prevent="createPublication" class="grid grid-cols-1 sm:grid-cols-2 gap-4" enctype="multipart/form-data">
-        <!-- Title Input -->
-        <div>
-            <label for="title" class="block text-sm font-medium">Title</label>
-            <input type="text" id="title" wire:model.defer="title" class="input input-bordered bg-white w-full" />
-            @error('title') 
-                <span class="text-red-500 text-sm">{{ $message }}</span> 
-            @enderror
+    <form wire:submit.prevent="createPublication" class="space-y-4" enctype="multipart/form-data">
+        <!-- Title and Journal in one row at the top -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Title Input -->
+            <div>
+                <label for="title" class="block text-sm font-medium">Titre</label>
+                <input type="text" id="title" wire:model.defer="title" class="input input-bordered bg-white w-full" />
+                @error('title') 
+                    <span class="text-red-500 text-sm">{{ $message }}</span> 
+                @enderror
+            </div>
+
+            <!-- Journal Input -->
+            <div>
+                <label for="journal" class="block text-sm font-medium">Journal</label>
+                <input type="text" id="journal" wire:model.defer="journal" class="input input-bordered bg-white w-full" />
+                @error('journal') 
+                    <span class="text-red-500 text-sm">{{ $message }}</span> 
+                @enderror
+            </div>
         </div>
 
-        <!-- Abstract Input -->
+        <!-- Abstract in the middle -->
         <div>
-            <label for="abstract" class="block text-sm font-medium">Resumé</label>
+            <label for="abstract" class="block text-sm font-medium">Description</label>
             <textarea id="abstract" wire:model.defer="abstract" class="textarea bg-white textarea-bordered w-full"></textarea>
         </div>
 
-        <!-- Publication Date Input -->
-        <div>
-            <label for="publication_date" class="block text-sm font-medium">Date de publication</label>
-            <input type="date" id="publication_date" wire:model.defer="publication_date" class="input input-bordered bg-white w-full" />
-            @error('publication_date') 
-                <span class="text-red-500 text-sm">{{ $message }}</span> 
-            @enderror
+        <!-- File Upload Inputs in one row at the bottom -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @foreach ($objects as $index => $objet)
+                <div wire:key="{{ $objet }}-{{ $index }}">
+                    <livewire:inputfile 
+                        wire:key="{{ $objet }}-{{ $index }}" 
+                        label="{{ $objet }}" 
+                        location="{{ $objet }}" 
+                        objet="{{ $objet }}" 
+                    />  
+                </div>
+            @endforeach
         </div>
-
-        <!-- Journal Input -->
-        <div>
-            <label for="journal" class="block text-sm font-medium">Journal</label>
-            <input type="text" id="journal" wire:model.defer="journal" class="input input-bordered bg-white w-full" />
-            @error('journal') 
-                <span class="text-red-500 text-sm">{{ $message }}</span> 
-            @enderror
-        </div>
-
-        <!-- File Upload Input -->
-        @foreach ($objects as $index => $objet)
-            <div wire:key="{{ $objet }}-{{ $index }}">
-                <livewire:inputfile 
-                    wire:key="{{ $objet }}-{{ $index }}" 
-                    label="{{ $objet }}" 
-                    location="{{ $objet }}" 
-                    objet="{{ $objet }}" 
-                />  
-            </div>
-        @endforeach
-
-        
 
         <!-- Buttons -->
-        <div class="flex justify-end sm:col-span-2">
+        <div class="flex justify-end">
             <button type="reset" class="btn-sm rounded bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset</button>
             <x-primary-button type="submit" class="btn-sm" wire:loading.attr="disabled" wire:target="createPublication">
                 <span wire:loading.remove wire:target="createPublication">{{ __('Ajouter') }}</span>

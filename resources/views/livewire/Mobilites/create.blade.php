@@ -13,7 +13,10 @@ new class extends Component {
     public $ville;
     public $pays;
     public $file;
+    public $fileName;
     public $location='mobilites';
+    public $date_debut;
+    public $date_fin;
 
 
     // Règles de validation
@@ -22,12 +25,16 @@ new class extends Component {
     'type' => 'required|in:nationale,internationale',
     'ville' => 'nullable|string|max:255',
     'pays' => 'nullable|string|max:255',
+    'date_debut' => 'required|date',
+    'date_fin' => 'required|date|after_or_equal:date_debut',
 ];
 
     // Messages d'erreur personnalisés
     protected $messages = [
     'lab.required' => 'Le lab d\'accueil est obligatoire.',
     'type.required' => 'Le type de mobilité est obligatoire.',
+    'date_debut.required' => 'La date de debut est obligatoire.',
+    'date_fin.required' => 'La date de fin est obligatoire.',
     
 ];
 
@@ -35,7 +42,8 @@ new class extends Component {
     public function handleFileUpload($event)
     {
         $this->file = $event['filePath'];
-        // dd($this->file);
+        $this->fileName = $event['fileName'];
+        // dd($this->file,$this->fileName);
         
     }
 
@@ -43,10 +51,10 @@ new class extends Component {
     public function createPublication()
     {
 
-        if($this->file == null){
-            $this->dispatch("file-required");
-            return;
-        }
+        // if($this->file == null){
+        //     $this->dispatch("file-required");
+        //     return;
+        // }
         // Valider les données du formulaire
         $this->validate();
         // dd($this->file, $this->lab, $this->type, $this->ville, $this->pays);
@@ -59,11 +67,15 @@ new class extends Component {
             'type' => $this->type,
             'ville' => $this->type === 'nationale' ? $this->ville : null,
             'pays' => $this->type === 'internationale' ? $this->pays : null,
-            'rapport_mobilite' => $this->file,
+            'file' => $this->file,
+            'file_name' => $this->fileName,
+            'date_debut' => $this->date_debut,
+            'date_fin' => $this->date_fin
+
         ]);
 
         // Réinitialiser le formulaire
-        $this->reset(['lab', 'type', 'ville', 'pays', 'file']);
+        $this->reset(['lab', 'type', 'ville', 'pays', 'file', 'date_debut', 'date_fin']);
 
         // Afficher un message de succès
         session()->flash('message', 'Mobilité créée avec succès !');
@@ -160,8 +172,26 @@ new class extends Component {
             @enderror
         </div>
 
+        <!-- Date de debut Input -->
+        <div>
+            <label for="date_debut" class="block text-sm font-medium">Date de debut</label>
+            <input type="date" id="date_debut" wire:model.defer="date_debut" class="input input-bordered bg-white w-full" />
+            @error('date_debut') 
+                <span class="text-red-500 text-sm">{{ $message }}</span> 
+            @enderror
+        </div>
+
+        <!-- Date de fin Input -->
+        <div>
+            <label for="date_fin" class="block text-sm font-medium">Date de fin</label>
+            <input type="date" id="date_fin" wire:model.defer="date_fin" class="input input-bordered bg-white w-full" />
+            @error('date_fin') 
+                <span class="text-red-500 text-sm">{{ $message }}</span> 
+            @enderror
+        </div>
+
         <!-- File Upload Input -->
-        <livewire:filepond label="Rapport de mobilité"  :location="'mobilites'" :objet="'mobilites'" />        <!-- Progress Bar -->
+        <livewire:inputfile label="Rapport de mobilité"  :location="'mobilites'" :objet="'mobilites'" />        <!-- Progress Bar -->
         
         
 

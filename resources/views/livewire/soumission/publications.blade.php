@@ -1,7 +1,7 @@
 <?php
 use App\Models\Publication;
 use Livewire\Volt\Component;
-
+use Carbon\Carbon;
 new class extends Component {
     public $publications;
     public $visibleCount = 6; // Number of publications to show initially
@@ -17,7 +17,7 @@ new class extends Component {
     }
 
     public function publications(){
-        $this->publications = auth()->user()->publications()->latest()->get();
+        $this->publications = auth()->user()->publications()->whereNotIsArchived()->latest()->get();
 
     }
 
@@ -33,7 +33,6 @@ new class extends Component {
         $this->visibleCount += 6; // Increase the count by 6 when "Show More" is clicked
         
         // Simulate a delay (you can remove this part in production)
-        sleep(1);
         
         $this->loading = false; // Set loading to false after publications are loaded
     }
@@ -52,12 +51,30 @@ new class extends Component {
             $this->publications();
         }
     }
+    public function publier($publicationId){
+        $publication = Publication::find($publicationId);
+        $publication->isPublished = true;
+        $publication->publication_date =Carbon::now()->locale('fr_FR');
+
+        $publication->save();
+        $this->publications();
+    }
+
+    public function archiver($publicationId){
+        $publication = Publication::find($publicationId);
+        $publication->isArchived = true;
+        $publication->isPublished = false;
+        $publication->save();
+        $this->publications();
+    }
 };
 ?>
 
-<div class="p-6 bg-gray-100 min-h-screen">
+<div class="">
+    @if($publications->isNotEmpty())
+    <div>
     @if ($viewingFileUrl)
-        <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="bg-white p-6 w-full rounded-lg ">
             <button class="mb-4 px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out" 
                 wire:click="$set('viewingFileUrl', null)">
                 <i class="fas fa-arrow-left"></i> Retour
@@ -66,55 +83,163 @@ new class extends Component {
             
         </div>
     @else
-        <h1 class="text-3xl font-extrabold text-gray-800 mb-6">Publications</h1>
 
         <!-- Publications list -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach ($publications->take($visibleCount) as $publication)
                 <div class="card bg-white shadow-lg rounded-lg p-5 hover:shadow-xl z-0 transition duration-200 relative">
-                    <!-- Top right icons -->
-                    <div class="absolute top-2 right-2 flex space-x-2">
-                        <!-- Edit Icon -->
-                        <button wire:click="editPublication({{ $publication->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        
-                        <!-- Archive Icon -->
-                        <button wire:click="archivePublication({{ $publication->id }})" class="text-yellow-500 hover:text-yellow-600 transition duration-150">
-                            <i class="fas fa-archive"></i>
-                        </button>
-                        
-                        <!-- Delete Icon -->
-                        <!-- Delete Icon -->
-                        <button onclick="confirmDeletion({{ $publication->id }})"  class="text-red-500 hover:text-red-600 transition duration-150">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <!-- Status and Actions -->
+                    <div class="flex justify-center mb-4">
+                        <!-- Status Badge -->
+                        <div class="flex items-center space-x-2 absolute top-2 left-2">
+                            @if ($publication->isArchived)
+                                <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full transition duration-150">
+                                    <i class="fas fa-archive"></i> Archivée
+                                </span>
+                            @elseif($publication->isPublished)
+                                <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full transition duration-150">
+                                    <i class="fas fa-globe"></i> En ligne
+                                </span>
+                            @else
+                            <span class="bg-blue-200 text-blue-600 text-xs px-2 py-1 rounded-full transition duration-150">
+                                <i class="fas fa-ban"></i> <!-- Icône de cercle barré -->
+                                Non publié
+                            </span>
 
+                            @endif
+                        </div>
+        
+                        <!-- Actions (Edit, Archive, Delete) -->
+                        <div class="absolute top-2 right-2 flex space-x-2">
+                            <!-- Edit Icon -->
+                            <button wire:click="editPublication({{ $publication->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
+                                <i class="fas fa-edit"></i>
+                            </button>
+        
+                            <!-- Archive Icon -->
+                            <button wire:click="archiver({{ $publication->id }})" class="text-yellow-500 hover:text-yellow-600 transition duration-150">
+                                <i class="fas fa-archive"></i>
+                            </button>
+        
+                            <!-- Delete Icon -->
+                            <button onclick="confirmDeletion({{ $publication->id }})" class="text-red-500 hover:text-red-600 transition duration-150">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            @if (!$publication->isPublished)
+                            <button  wire:click="publier({{ $publication->id }})"  class="btn btn-xs bg-blue-500 border-none text-white hover:bg-green-600">
+                                <i class="fas fa-paper-plane"></i>
+                                Publier
+                            </button>
+                            @endif
+                        </div>
                     </div>
+        
+                    <!-- Content -->
+                    <div class="space-y-4">
+                        <!-- Title -->
+                        <div class="mb-2">
+                            <span class="text-sm text-gray-500 font-medium uppercase tracking-wider">Titre</span>
+                            :
+                            <span class="font-bold text-lg bg-gray-200 px-4 py-1 rounded text-gray-800 mt-1">{{ $publication->title }}</span>
+                        </div>
                     
-                    <!-- Publication Content -->
-                    <h2 class="font-bold text-xl text-gray-800 mb-2">{{ $publication->title }}</h2>
-                    <p class="text-sm text-gray-600">{{ $publication->journal }}</p>
-                    <p class="text-sm text-gray-600">{{ $publication->publication_date }}</p>
-                    <p class="text-sm mt-3 text-gray-700 leading-snug">{{ Str::words($publication->abstract, 20, " ...") }}</p>
-                    <div class="mt-4 space-y-3">
-                        @if ($publication->file_path)
-                            <div class="flex items-center text-blue-500 text-sm hover:text-blue-600 transition duration-150 cursor-pointer" 
-                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->file_path)) }}')">
-                                <i class="fas fa-file-pdf mr-2"></i> Voir l'article
+                        <div class="flex gap-4">
+                            <!-- Section 1 -->
+                            <div class="flex-1 space-y-2">
+                                <!-- Journal -->
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-semibold">Journal :</span> {{ $publication->journal }}
+                                </div>
+                    
+                               
+                    
                             </div>
-                        @endif
-                        @if ($publication->rib)
-                            <div class="flex items-center text-green-500 text-sm hover:text-green-600 transition duration-150 cursor-pointer" 
-                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->rib)) }}')">
-                                <i class="fas fa-file-invoice mr-2"></i> Voir RIB
+                            
+                    
+                            
+                        </div>
+                       
+                    
+                        <!-- Abstract (on a single line) -->
+                        <div class="text-sm text-gray-600 truncate">
+                            <span class="font-semibold">Description :</span>
+                            <div class="w-full bg-gray-100 pl-2 pr-2 pt-0 rounded-lg h-20 ">
+                                <p class="text-sm text-gray-600 whitespace-pre-line">
+                                    {{ Str::words($publication->abstract, 15, '...') }}
+                                </p>
                             </div>
-                        @endif
+                        </div>
+                    
+                        <!-- File Section -->
+                        <div class="mt-2 space-y-2">
+                            @if ($publication->file_path)
+                                <div class="relative">
+                                    <!-- Badge for "Consulter" -->
+                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition duration-150 cursor-pointer"
+                                        wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->file_path)) }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                    
+                                    <!-- File Name -->
+                                    <div class="bg-gray-100 p-2 rounded-lg border border-gray-200">
+                                        <p class="text-xs text-gray-600 truncate">
+                                            Fichier : {{ $publication->file_name }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="text-xs text-red-600">
+                                    <span class="flex items-center space-x-1 bg-red-100 px-3 py-1 rounded-full w-fit">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>Fichier manquant</span>
+                                    </span>
+                                </p>
+                            @endif
+                    
+                            @if ($publication->rib)
+                                <div class="relative">
+                                    <!-- Badge for "Consulter" -->
+                                    <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition duration-150 cursor-pointer"
+                                        wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->rib)) }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                    
+                                    <!-- File Name -->
+                                    <div class="bg-gray-100 p-2 rounded-lg border border-gray-200">
+                                        <p class="text-xs text-gray-600 truncate">
+                                            RIB : {{$publication->rib_name }}
+                                        </p>
+                                    </div>
+                                </div>
+                            @else
+                                <p class="text-xs text-red-600">
+                                    <span class="flex items-center space-x-1 bg-red-100 px-3 py-1 rounded-full w-fit">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <span>RIB manquant</span>
+                                    </span>
+                                </p>
+                            @endif
+
+
+                            @if($publication->isPublished)
+                             <!-- Publication Date -->
+                             <div class="text-[10px] bg-blue-500 w-fit px-2 py-1 rounded-[5px]   text-gray-600">
+                                <span class="font-semibold text-white">Date de publication :</span>
+                                <span class="text-black">{{ \Carbon\Carbon::parse($publication->publication_date)->locale('fr')->isoFormat('LL') }}</span>
+                            </div>
+                            @endif
+                             <!-- Created At -->
+                             <div class="text-[10px] float-end text-gray-500">
+                                <span class="font-semibold">Créé :</span>
+                                {{ $publication->created_at->locale('fr')->diffForHumans() }}
+                            </div>
+                        </div>
                     </div>
+        
+                   
                 </div>
             @endforeach
         </div>
-
         <!-- Show More Button -->
         @if ($publications->count() > $visibleCount)
             <div class="text-center mt-6">
@@ -127,6 +252,17 @@ new class extends Component {
                 </x-secondary-button>
             </div>
         @endif
+    @endif
+    </div>
+    @else
+        <div class="text-center mt-6 h-full w-full border p-10 bg-white rounded-lg shadow-lg max-w-2xl">
+            <div class="text-gray-500 text-lg">
+                <i class="fas fa-box-open text-4xl mb-4"></i> 
+                <span class="block text-2xl">
+                    Aucune publication disponible
+                </span>
+            </div>
+        </div>
     @endif
 </div>
 

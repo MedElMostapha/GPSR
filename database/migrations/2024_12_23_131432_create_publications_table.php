@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('abstract')->nullable();
-            $table->date('publication_date');
+            $table->date('publication_date')->nullable();
             $table->string('journal');
             $table->boolean('isArchived')->default(false);
+            $table->boolean('isPublished')->default(false);
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('file_path')->nullable();
+            $table->string('file_name')->nullable();
             $table->string('rib')->nullable();
+            $table->string('rib_name')->nullable();
             $table->timestamps();
         });
     }

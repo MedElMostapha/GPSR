@@ -80,8 +80,8 @@ new class extends Component
                                 wire:navigate
                                 class="flex items-center space-x-2"
                             >
-                                <i class="fas fa-upload"></i>
-                                <span x-show="open" class="transition-all duration-200">{{ __('sommetre') }}</span>
+                                <i class="fas fa-paper-plane"></i>
+                                <span x-show="open" class="transition-all duration-200">{{ __('publier') }}</span>
                             </x-nav-link>
                         </li>
                     </ul>
@@ -123,8 +123,23 @@ new class extends Component
                     </ul>
                 </li>
 
-                <!-- Profile Link -->
+               
+                
+
                 <li>
+                    <x-nav-link
+                        :href="route('archive')"
+                        :active="request()->routeIs('archive')"
+                        wire:navigate
+                        class="flex items-center space-x-2"
+                    >
+                        <i class="fas fa-archive"></i>
+                        <span x-show="open" class="transition-all duration-300">{{ __('Archive') }}</span>
+                    </x-nav-link>
+                </li>
+
+                 <!-- Profile Link -->
+                 <li>
                     <x-nav-link
                         :href="route('profile')"
                         :active="request()->routeIs('profile')"
@@ -135,6 +150,21 @@ new class extends Component
                         <span x-show="open" class="transition-all duration-300">{{ __('Profile') }}</span>
                     </x-nav-link>
                 </li>
+                 
+
+                <!-- Profile Link -->
+                <li>
+                    <x-nav-link
+                        :href="route('users')"
+                        :active="request()->routeIs('users')"
+                        wire:navigate
+                        class="flex items-center space-x-2"
+                    >
+                    <i class="fa-solid fa-user-gear"></i>
+                        <span x-show="open" class="transition-all duration-300">{{ __('Users') }}</span>
+                    </x-nav-link>
+                </li>
+                
             </ul>
         </nav>
 
