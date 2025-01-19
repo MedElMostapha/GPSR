@@ -9,6 +9,7 @@
         "php": "^8.2",
         "laravel/framework": "^11.31",
         "laravel/tinker": "^2.9",
+        "livewire/flux": "*",
         "livewire/livewire": "^3.5",
         "livewire/volt": "^1.6",
         "power-components/livewire-powergrid": "^6.1",

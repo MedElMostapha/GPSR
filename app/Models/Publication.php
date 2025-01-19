@@ -31,6 +31,12 @@ class Publication extends Model
     {
         return $this->hasMany(Author::class);
     }
+    public function scopeWhereNotIsArchivedAndIsPublished($query)
+    {
+        return $query->where('isArchived', false)
+            ->where('isPublished', true)
+        ;
+    }
     public function scopeWhereNotIsArchived($query)
     {
         return $query->where('isArchived', false);

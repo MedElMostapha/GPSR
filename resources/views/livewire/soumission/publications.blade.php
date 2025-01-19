@@ -19,7 +19,7 @@ new class extends Component {
     public function publications(){
         if(auth()->user()->hasRole('admin')){
             
-            $this->publications = Publication::whereNotIsArchived()->latest()->get();
+            $this->publications = Publication::whereNotIsArchivedAndIsPublished()->latest()->get();
         }else{
             
             $this->publications = auth()->user()->publications()->whereNotIsArchived()->latest()->get();
@@ -168,12 +168,21 @@ new class extends Component {
                        
                     
                         <!-- Abstract (on a single line) -->
-                        <div class="text-sm text-gray-600 truncate">
+                        <div x-data="{ showMore: false }" class="text-sm text-gray-600">
                             <span class="font-semibold">Description :</span>
-                            <div class="w-full bg-gray-100 pl-2 pr-2 pt-0 rounded-lg h-20 ">
-                                <p class="text-sm text-gray-600 whitespace-pre-line">
+                            <div class="w-full bg-gray-100 pl-2 pr-2 pt-2 pb-2 rounded-lg">
+                                <p x-show="!showMore" class="text-sm text-gray-600 whitespace-pre-line">
                                     {{ Str::words($publication->abstract, 15, '...') }}
                                 </p>
+                                <p x-show="showMore" class="text-sm text-gray-600 whitespace-pre-line">
+                                    {{ $publication->abstract }}
+                                </p>
+                                <button 
+                                    @click="showMore = !showMore" 
+                                    class="text-blue-500 hover:text-blue-700 focus:outline-none mt-2"
+                                >
+                                    <span x-text="showMore ? 'Lire moins' : 'Lire plus'"></span>
+                                </button>
                             </div>
                         </div>
                     
@@ -236,9 +245,19 @@ new class extends Component {
                             </div>
                             @endif
                              <!-- Created At -->
-                             <div class="text-[10px] float-end text-gray-500">
-                                <span class="font-semibold">Créé :</span>
-                                {{ $publication->created_at->locale('fr')->diffForHumans() }}
+                             <div class=" text-gray-500">
+                                <div class="text-[10px] float-end">
+
+                                    <span class="font-semibold">Créé :</span>
+                                    {{ $publication->created_at->locale('fr')->diffForHumans() }}
+                                </div>
+
+                                @if(auth()->user()->hasRole('admin'))
+                                <div class="text-[10px] float-start">
+                                <span class="font-semibold">Publié par :</span>
+                                    <span>{{ $publication->user->name }}</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>

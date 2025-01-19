@@ -309,6 +309,13 @@ new class extends Component {
                             
                             {{ $mobilite->created_at->locale('fr')->diffForHumans() }}
                         </div>
+
+                        @if(auth()->user()->hasRole('admin'))
+                        <div class="float-start text-[10px]">
+                        <span class="font-semibold">Demandé par :</span>
+                            <span>{{ $mobilite->user->name }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
             @endforeach
