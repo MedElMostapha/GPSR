@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\PublicationController;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\EnsureUserHasRole;
 
-
-
-Route::view('/', 'welcome');
+Route::view('/', 'welcome')->name('home');
 Route::post('/upload', [FileUploadController::class, 'upload'])->name('file.upload');
 
 Route::view('dashboard', 'dashboard')
@@ -19,7 +19,7 @@ Route::view('soumission', 'soumission')
     ->middleware(['auth', 'verified'])
     ->name('soumission');
 Route::view('users', 'users')
-    ->middleware(['auth', 'verified'])
+    ->middleware(['hasRole:admin'])
     ->name('users');
 Route::view('archive', 'archive')
     ->middleware(['auth', 'verified'])

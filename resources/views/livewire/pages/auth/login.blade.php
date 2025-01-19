@@ -9,7 +9,6 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public LoginForm $form;
 
-    public bool $loading = false; // Add a loading state
 
     /**
      * Handle an incoming authentication request.
@@ -18,26 +17,46 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $this->validate();
 
-        $this->loading = true; // Set loading to true when the login process starts
 
-        try {
-            $this->form->authenticate();
-
-            Session::regenerate();
-
-            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-        } finally {
-            $this->loading = false; // Set loading to false when the process ends
-        }
+            $user = $this->form->user();
+            if($user->isValidated){
+                
+                $this->form->authenticate();
+    
+                Session::regenerate();
+    
+                $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            }else{
+                session()->flash('message', 'Desolé, votre compte n\'est pas encore validé. Veuillez contacter l\'administrateur.');
+            }    
+            
     }
 }; ?>
 
 <div>
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
+    @if (session()->has('message'))
+    <div 
+        x-data="{ show: true }" 
+        x-show="show" 
+        x-init="setTimeout(() => show = false, 10000)" 
+        class="bg-yellow-500 text-white p-4 rounded-md mb-4 flex items-center justify-between"
+    >
+        <div class="flex items-center">
+            <!-- Icon -->
+            <i class="fas fa-info-circle mr-2"></i>
+            <span>{{ session('message') }}</span>
+        </div>
+        <button @click="show = false" class="text-white bg-transparent hover:bg-yellow-700 rounded-full p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+@endif
 
     <form wire:submit="login">
-        <h1>{{ __('auth.login') }}</h1>
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" />

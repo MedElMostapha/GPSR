@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('specialite');
+            $table->string('specialite')->nullable();
             $table->string("attestation")->nullable();
             $table->string("image")->nullable();
             $table->boolean("isValidated")->default(false);

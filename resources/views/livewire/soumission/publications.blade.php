@@ -17,7 +17,13 @@ new class extends Component {
     }
 
     public function publications(){
-        $this->publications = auth()->user()->publications()->whereNotIsArchived()->latest()->get();
+        if(auth()->user()->hasRole('admin')){
+            
+            $this->publications = Publication::whereNotIsArchived()->latest()->get();
+        }else{
+            
+            $this->publications = auth()->user()->publications()->whereNotIsArchived()->latest()->get();
+        }
 
     }
 
@@ -125,6 +131,7 @@ new class extends Component {
                             <button onclick="confirmDeletion({{ $publication->id }})" class="text-red-500 hover:text-red-600 transition duration-150">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            
                             @if (!$publication->isPublished)
                             <button  wire:click="publier({{ $publication->id }})"  class="btn btn-xs bg-blue-500 border-none text-white hover:bg-green-600">
                                 <i class="fas fa-paper-plane"></i>

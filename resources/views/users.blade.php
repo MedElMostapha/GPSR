@@ -10,8 +10,9 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
 
-                    <livewire:users.users />
-
+                    
+                    <livewire:user-create/>
+                    <livewire:user-table/>
                 </div>
             </div>
         </div>

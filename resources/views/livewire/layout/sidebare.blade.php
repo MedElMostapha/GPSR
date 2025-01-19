@@ -80,8 +80,8 @@ new class extends Component
                                 wire:navigate
                                 class="flex items-center space-x-2"
                             >
-                                <i class="fas fa-paper-plane"></i>
-                                <span x-show="open" class="transition-all duration-200">{{ __('publier') }}</span>
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>                          
+                             <span x-show="open" class="transition-all duration-200">{{ __('ajouter') }}</span>
                             </x-nav-link>
                         </li>
                     </ul>
@@ -116,7 +116,7 @@ new class extends Component
                                 wire:navigate
                                 class="flex items-center space-x-2"
                             >
-                                <i class="fas fa-upload"></i>
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>                          
                                 <span x-show="open" class="transition-all duration-200">{{ __('demander') }}</span>
                             </x-nav-link>
                         </li>
@@ -152,6 +152,7 @@ new class extends Component
                 </li>
                  
 
+                @if(auth()->user()->hasRole('admin'))
                 <!-- Profile Link -->
                 <li>
                     <x-nav-link
@@ -164,6 +165,7 @@ new class extends Component
                         <span x-show="open" class="transition-all duration-300">{{ __('Users') }}</span>
                     </x-nav-link>
                 </li>
+                @endif
                 
             </ul>
         </nav>

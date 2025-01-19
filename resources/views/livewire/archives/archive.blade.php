@@ -17,7 +17,13 @@ new class extends Component {
     }
 
     public function publications(){
-        $this->publications = auth()->user()->publications()->where('isArchived', true)->latest()->get();
+        if(auth()->user()->hasRole('admin')){
+            
+            $this->publications = Publication::where('isArchived', true)->latest()->get();
+        }else{
+            
+            $this->publications = auth()->user()->publications()->where('isArchived', true)->latest()->get();
+        }
 
     }
 
@@ -68,7 +74,7 @@ new class extends Component {
 };
 ?>
 
-<div class="p-6 bg-gray-100 min-h-screen flex items-center justify-center">
+<div class="">
     @if($publications->isNotEmpty())
         <div>
             @if ($viewingFileUrl)

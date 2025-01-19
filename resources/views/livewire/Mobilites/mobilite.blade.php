@@ -30,7 +30,12 @@ new class extends Component {
 
     public function mobilites()
     {
+
+        // Fetch publications for the authenticated user
         $this->mobilites = auth()->user()->mobilites()->latest()->get();
+        if(auth()->user()->hasRole('admin')){
+        $this->mobilites = Mobilite::latest()->get();
+        }
     }
 
     public function viewFile($fileUrl)
@@ -163,6 +168,7 @@ new class extends Component {
             @foreach ($mobilites->take($visibleCount) as $mobilite)
                 <div class="card bg-white shadow-lg rounded-lg p-5 hover:shadow-xl z-0 transition duration-200 relative">
                     <!-- Status and Actions -->
+                    
                     <div class="flex justify-center mb-4">
                         <!-- Status Badge -->
                         <div class="flex items-center space-x-2 absolute top-2 left-2">
@@ -189,6 +195,7 @@ new class extends Component {
                                 <i class="fas fa-trash"></i>
                             </button>
             
+                            @if(auth()->user()->hasRole('admin'))
                             <!-- Validate/Reject Button -->
                             @if ($mobilite->isValidated == 1)
                                 <button wire:click="validateMobilite({{ $mobilite->id }})" class="btn btn-xs bg-red-500 border-none text-white hover:bg-red-600">
@@ -201,8 +208,10 @@ new class extends Component {
                                     Valider
                                 </button>
                             @endif
+                            @endif
                         </div>
                     </div>
+                    
             
                     <!-- Content -->
                     <div class="space-y-4">

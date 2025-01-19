@@ -130,7 +130,7 @@ new class extends Component {
     >
         <!-- Drag and Drop Zone -->
         <div class="w-full ">
-            <span class="text-sm text-gray-600 float-start">
+            <span class="block text-sm font-medium float-start">
 
                 {{$label}}
             </span>

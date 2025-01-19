@@ -16,17 +16,16 @@ new class extends Component
     public $file_name;
     public $ribFile; // For RIB file upload
     public $rib_name;
-    public $objects = ['article', 'rib'];
+    public $objects = ['Article', 'Rib'];
 
     #[On('file-uploaded')]
     public function handleFileUpload($event)
     {
-        if ($event['objet'] == "article") {
+        if ($event['objet'] == "Article") {
             $this->articleFile = $event['filePath'];
             $this->file_name = $event['fileName'];
 
-            // dd($this->file_name);
-        } elseif ($event['objet'] == "rib") {
+        } elseif ($event['objet'] == "Rib") {
             $this->ribFile = $event['filePath'];
             $this->rib_name = $event['fileName'];
             // dd($this->ribFile);
@@ -83,7 +82,7 @@ new class extends Component
 };
 ?>
 <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Publier une publication</h1>
+    <h1 class="text-2xl font-bold mb-4">Ajouter une publication</h1>
 
     <!-- Success message -->
     @if (session()->has('message'))

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -41,6 +42,12 @@ class LoginForm extends Form
         RateLimiter::clear($this->throttleKey());
     }
 
+    public function user()
+    {
+        $user = User::where('email', $this->email)->first();
+        return $user;
+    }
+
     /**
      * Ensure the authentication request is not rate limited.
      */
@@ -67,6 +74,6 @@ class LoginForm extends Form
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
     }
 }
