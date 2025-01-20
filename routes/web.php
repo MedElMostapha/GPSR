@@ -15,18 +15,28 @@ Route::view('dashboard', 'dashboard')
 
 
 
+
 Route::view('soumission', 'soumission')
     ->middleware(['auth', 'verified'])
     ->name('soumission');
 Route::view('users', 'users')
     ->middleware(['hasRole:admin'])
     ->name('users');
+
+Route::view('viewprofile/{user}', 'viewprofile')
+    ->middleware(['hasRole:admin'])
+    ->name('show');
 Route::view('archive', 'archive')
     ->middleware(['auth', 'verified'])
     ->name('archive');
 Route::view('publication', 'publication')
     ->middleware(['auth', 'verified'])
     ->name('publication');
+
+Route::view('publication/edit/{publication}', 'modifier-publication')
+    ->middleware(['hasRole:admin'])
+    ->name('modifier-publication');
+
 Route::view('mobilite', 'mobilite')
     ->middleware(['auth', 'verified'])
     ->name('mobilite');

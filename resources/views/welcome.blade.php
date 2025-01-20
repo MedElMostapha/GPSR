@@ -14,14 +14,12 @@
 </head>
 <body class="antialiased bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
     <!-- Navbar -->
-    <nav class="bg-gradient-to-r from-gray-200 to-white text-gray-700  shadow">
-        <div class="container mx-auto   md:flex md:justify-between md:items-center">
+    <nav class="bg-gradient-to-r from-gray-200 to-white text-gray-700 shadow">
+        <div class="container mx-auto md:flex md:justify-between md:items-center">
             <div class="flex justify-between items-center">
                 <a href="/">
-
                     <x-dash-logo class="w-20 h-20 fill-current text-gray-500" />
                 </a>
-                {{-- <a href="#" class="text-2xl font-bold hover:text-gray-300">GPSR</a> --}}
                 <button type="button" class="text-gray-200 hover:text-gray-300 focus:outline-none md:hidden">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
@@ -33,12 +31,12 @@
                 @if (Route::has('login'))
                     <div class="space-x-4">
                         @auth
-                            <a  wire:navigate href="{{ url('/dashboard') }}" class="hover:underline">Tableau de bord</a>
+                            <a wire:navigate href="{{ url('/dashboard') }}" class="hover:underline">Tableau de bord</a>
                         @else
-                            <a  wire:navigate href="{{ route('login') }}" class="hover:underline">Se connecter</a>
+                            <a wire:navigate href="{{ route('login') }}" class="hover:underline">Se connecter</a>
 
                             @if (Route::has('register'))
-                                <a  wire:navigate href="{{ route('register') }}" class="ml-4 hover:underline">S'inscrire</a>
+                                <a wire:navigate href="{{ route('register') }}" class="ml-4 hover:underline">S'inscrire</a>
                             @endif
                         @endauth
                     </div>
@@ -59,12 +57,34 @@
                         <a wire:navigate href="{{ route('login') }}" class="ml-4 px-6 py-3 text-lg font-semibold bg-purple-800 text-white rounded-lg shadow-md hover:bg-purple-700">Se connecter</a>
                     </div>
                 </div>
-                {{-- <div class="w-full md:w-1/2">
-                    <img src="https://via.placeholder.com/600x400" alt="Gestion des publications" class="rounded-lg shadow-lg" />
-                </div> --}}
             </div>
         </div>
     </header>
+
+    <!-- Section Search Bar -->
+    <section class="py-16 bg-gray-100 dark:bg-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-center">
+                <div class="w-full max-w-2xl">
+                    <h2 class="text-3xl font-bold text-center mb-8">Rechercher des publications</h2>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            placeholder="Rechercher par titre, auteur, ou mot-clé..."
+                            class="w-full px-6 py-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400"
+                        />
+                        <button
+                            class="absolute right-0 top-0 mt-3 mr-4 p-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Section Fonctionnalités -->
     <section id="features" class="py-16 bg-white dark:bg-gray-800">
@@ -131,7 +151,7 @@
                         <div class="ml-4">
                             <h4 class="text-lg font-semibold">Dr. Tourade Diallo</h4>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Directeur des etudes SupNum</p>
-                        </div
+                        </div>
                     </div>
                 </div>
             </div>

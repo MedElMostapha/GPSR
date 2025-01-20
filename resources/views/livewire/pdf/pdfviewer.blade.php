@@ -7,6 +7,7 @@ new class extends Component {
 
     public function mount($fileUrl)
     {
+
         $this->fileUrl = $fileUrl;
     }
 

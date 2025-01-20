@@ -104,24 +104,83 @@ final class UserTable extends PowerGridComponent
     #[On('delete')]
     public function delete($rowId): void
     {
+        // Trouver l'utilisateur à supprimer
         $user = User::find($rowId);
-        $user->delete();
-        $this->datasource();
+
+        if (!$user) {
+            $this->js("
+            Swal.fire({
+                title: 'Error!',
+                text: 'User not found.',
+                icon: 'error',
+            });
+        ");
+            return;
+        }
+
+        // Afficher une boîte de dialogue SweetAlert2 pour confirmation
+        $this->js("
+        Swal.fire({
+            title: 'Etes-vous sûr?',
+            text: 'Cette action est irréversible!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Oui, supprimer',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('confirmDelete', { rowId: $user->id });
+            }
+        });
+    ");
+    }
+
+
+    #[On('confirmDelete')]
+    public function confirmDelete($rowId): void
+    {
+        // Trouver et supprimer l'utilisateur
+        $user = User::find($rowId);
+        if ($user) {
+            $user->delete();
+
+            // Afficher un message de succès
+            $this->js(
+                "Swal.fire({
+                    title: 'Supprimé!',
+                    text: 'L\'utilisateur a été supprimé.',
+                    icon: 'success',
+                });"
+            );
+
+            // Rafraîchir la source de données
+            $this->datasource();
+        }
+    }
+    #[On('view')]
+    public function view($rowId): void
+    {
+        $user = User::find($rowId);
+
+        $this->redirect(route('show', ['user' => $user]), navigate: true);
     }
 
     public function actions(User $row): array
     {
         return [
-            Button::add('edit')
-                ->slot('Modifier')
+
+            Button::add('delete')
                 ->id()
-                ->class('btn bg-blue-600 btn-xs border-none text-white hover:bg-blue-500')
-                ->dispatch('edit', ['rowId' => $row->id]),
-            Button::add('edit')
-                ->slot('Supprimer')
-                ->id()
+                ->icon('default-trash')
                 ->class('btn bg-red-600 btn-xs border-none text-white hover:bg-red-500')
-                ->dispatch('delete', ['rowId' => $row->id])
+                ->dispatch('delete', ['rowId' => $row->id]),
+            Button::add('view')
+                ->id()
+                ->icon('default-eye')
+                ->class('btn bg-blue-600 btn-xs border-none text-white hover:bg-blue-500')
+                ->dispatch('view', ['rowId' => $row->id])
         ];
     }
 

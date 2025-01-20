@@ -22,6 +22,7 @@ class Publication extends Model
         'isPublished'
     ];
 
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -22,7 +22,9 @@ new #[Layout('layouts.guest')] class extends Component
     public string $selectedRole = ''; // Bind to the selected role
     public $roles; // Holds available roles
     public $identity_copy; // For identity card upload
+    public $identity_fileName;
     public $attestation; // For attestation upload
+    public $attestation_fileName;
     public int $currentStep = 1;
     public bool $loading = false; // Add a loading state
     public int $uploadProgress = 0; // Track upload progress
@@ -47,11 +49,13 @@ new #[Layout('layouts.guest')] class extends Component
     {
         if($this->identity_copy == null && $event['objet']== 'identite'){
             $this->identity_copy = $event['filePath'];
+            $this->identity_fileName = $event['fileName'];
 
         }
 
         if($this->attestation == null && $event['objet']== 'attestation'){
             $this->attestation = $event['filePath'];
+            $this->attestation_fileName = $event['fileName'];
 
         }
 
@@ -99,7 +103,10 @@ new #[Layout('layouts.guest')] class extends Component
             'specialite' => $this->specialite,
             'password' => $validated['password'],
             'identity_copy' => $this->identity_copy,
+            'identitity_fileName' => $this->identity_fileName,
             'attestation' => $this->attestation,
+            'attestation_fileName' => $this->attestation_fileName
+
         ]);
 
         // Assign the selected role to the user

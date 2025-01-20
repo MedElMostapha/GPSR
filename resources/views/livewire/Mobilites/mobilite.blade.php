@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use App\Models\Mobilite;
 use Livewire\Attributes\On;
+use \App\Models\User;
 new class extends Component {
     public $mobilites;
     public $visibleCount = 6; // Number of publications to show initially
@@ -137,16 +138,23 @@ new class extends Component {
     }
 
     public function validateMobilite($mobiliteId)
-        {
-            $mobilite = Mobilite::find($mobiliteId);
+    {
+        $mobilite = Mobilite::find($mobiliteId);
 
-            $etat = $mobilite->isValidated;
+        $etat = $mobilite->isValidated;
 
-            if ($mobilite) {
-                $mobilite->update(['isValidated' => !$etat]);
-                $this->mobilites(); // Refresh the list
-            }
+        if ($mobilite) {
+            $mobilite->update(['isValidated' => !$etat]);
+            $this->mobilites(); // Refresh the list
         }
+    }
+
+    public function viewProfile($rowId): void
+    {
+        $user = User::find($rowId);
+
+        $this->redirect(route('show', ['user' => $user]), navigate: true);
+    }
 };
 ?>
 
@@ -313,7 +321,7 @@ new class extends Component {
                         @if(auth()->user()->hasRole('admin'))
                         <div class="float-start text-[10px]">
                         <span class="font-semibold">Demandé par :</span>
-                            <span>{{ $mobilite->user->name }}</span>
+                            <span wire:click.prevent="viewProfile({{ $mobilite->user->id }})" class="text-blue-500 hover:text-blue-700 cursor-pointer">{{ $mobilite->user->name }}</span>
                         </div>
                         @endif
                     </div>

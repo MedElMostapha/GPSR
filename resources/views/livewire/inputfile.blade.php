@@ -13,15 +13,30 @@ new class extends Component {
     public string $errorMessage = ''; 
     public string $location;
     public string $objet;
-    protected $rules = [
-        'file' => 'required|file|mimes:pdf,doc,docx|max:10240', // PDF, DOC, DOCX, max 10MB
-    ];
 
-    protected $messages = [
-        'file.required' => 'Le rapport est obligatoire.',
-        'file.mimes' => 'Le fichier doit être au format PDF, DOC ou DOCX.',
-        'file.max' => 'Le fichier ne doit pas dépasser 10 Mo.',
-    ];
+    public $fileType=['pdf','doc','docx'];
+
+    protected function rules()
+    {
+        return [
+            'file' => [
+                'required',
+                'file',
+                'mimes:' . implode(',', $this->fileType), // Dynamically set the MIME types
+                'max:10240', // Maximum size in kilobytes (10MB)
+            ],
+        ];
+    }
+
+    protected function messages()
+    {
+        return [
+            'file.required' => 'Le rapport est obligatoire.',
+            'file.mimes' => 'Le fichier doit être au format ' . implode(', ', $this->fileType) . '.',
+            'file.max' => 'Le fichier ne doit pas dépasser 10 Mo.',
+        ];
+    }
+
 
     public function updatedFile()
     {
@@ -39,26 +54,32 @@ new class extends Component {
 
     public function uploadFile()
     {
-        $this->validate();
+        try {
+            $this->validate();
 
-        // Enregistrer le fichier et obtenir son chemin
-        $filePath = $this->file->store($this->location, 'public');
+            // Enregistrer le fichier et obtenir son chemin
+            $filePath = $this->file->store($this->location, 'public');
 
-        // Extraire le nom du fichier
-        $fileName = $this->file->getClientOriginalName();
+            // Extraire le nom du fichier
+            $fileName = $this->file->getClientOriginalName();
 
-        // Émet un événement pour notifier que le fichier a été uploadé et traité
-        $this->dispatch('file-uploaded', [
-            'filePath' => $filePath,
-            'fileName' => $fileName,
-            'objet' => $this->objet,
-        ]);
+            // Émet un événement pour notifier que le fichier a été uploadé et traité
+            $this->dispatch('file-uploaded', [
+                'filePath' => $filePath,
+                'fileName' => $fileName,
+                'objet' => $this->objet,
+            ]);
 
-        // Réinitialiser le champ après upload
-        $this->reset('file');
+            // Réinitialiser le champ après upload
+            $this->reset('file');
 
-        // Afficher un message de succès
-        session()->flash('message', 'Fichier téléchargé avec succès.');
+            // Afficher un message de succès
+            session()->flash('message', 'Fichier téléchargé avec succès.');
+        } catch (\Throwable $th) {
+            session()->flash('error', $th->getMessage());
+            //throw $th;
+        }
+        
     }
 
     public function resetFile()
@@ -84,25 +105,27 @@ new class extends Component {
             isLoading: false,
             filePreview: null,
             isSuccess: false,
-            fileType: '' // Add fileType to store the file extension
+            isError: false,
+            fileType: '' // Stocke l'extension du fichier
         }"
         x-on:livewire-upload-start="
             isLoading = true;
-            progress = 0; // Reset progress when upload starts
+            progress = 0; // Réinitialise la progression au début du téléchargement
         "
         x-on:livewire-upload-finish="
             isLoading = false; 
             uploaded = true; 
-            isSuccess = true; // Set success state
+            isSuccess = true; // Définit l'état de succès
             fileUrl = $event.detail.filePath;
             uploadedFileName = $event.detail.fileName;
         "
         x-on:livewire-upload-error="
             isLoading = false;
-            isSuccess = false; // Reset success state on error
+            isError = true;
+            isSuccess = false; // Réinitialise l'état de succès en cas d'erreur
         "
         x-on:livewire-upload-progress="
-            progress = $event.detail.progress; // Update progress
+            progress = $event.detail.progress; // Met à jour la progression
         "
         x-on:dragover.prevent="isDragging = true"
         x-on:dragleave.prevent="isDragging = false"
@@ -110,14 +133,14 @@ new class extends Component {
             isDragging = false;
             const files = $event.dataTransfer.files;
             if (files.length) {
-                isLoading = true; // Manually set isLoading to true
+                isLoading = true; // Active le chargement manuellement
                 fileName = files[0].name;
-                fileSize = (files[0].size / 1024).toFixed(2) + ' KB'; // Convert to KB
+                fileSize = (files[0].size / 1024).toFixed(2) + ' KB'; // Convertit en KB
                 filePreview = URL.createObjectURL(files[0]);
-                fileType = fileName.split('.').pop().toLowerCase(); // Extract file extension
+                fileType = fileName.split('.').pop().toLowerCase(); // Extrait l'extension du fichier
                 $wire.upload('file', files[0], {
                     progress: (value) => {
-                        progress = value; // Update progress dynamically
+                        progress = value; // Met à jour la progression dynamiquement
                     }
                 }).then(() => {
                     isLoading = false;
@@ -128,27 +151,25 @@ new class extends Component {
             }
         "
     >
-        <!-- Drag and Drop Zone -->
-        <div class="w-full ">
+        <!-- Zone de glisser-déposer -->
+        <div class="w-full">
             <span class="block text-sm font-medium float-start">
-
-                {{$label}}
+                {{ $label }}
             </span>
         </div>
         <div 
             class="relative w-full h-20 bg-gray-100 border-2 border-dashed rounded-lg flex items-center justify-center transition-all duration-300"
             :class="{ 
-                'border-blue-500 bg-blue-50': isDragging, 
-                'border-gray-300': !isDragging,
-                'border-green-500 bg-green-50': isSuccess
+                'border-green-500 bg-green-50': isSuccess,
+                'border-red-500 bg-red-50': isError
             }"
         >
-            <!-- Loading Spinner with Percentage and File Info -->
+            <!-- Spinner de chargement avec pourcentage et informations sur le fichier -->
             <template x-if="isLoading">
                 <div class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 rounded-lg p-2">
-                    <!-- Circular Progress and File Info -->
+                    <!-- Progression circulaire et informations sur le fichier -->
                     <div class="flex items-center space-x-4">
-                        <!-- Circular Progress -->
+                        <!-- Progression circulaire -->
                         <div class="relative w-12 h-12">
                             <svg class="w-full h-full" viewBox="0 0 36 36">
                                 <path 
@@ -168,10 +189,10 @@ new class extends Component {
                                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                 />
                             </svg>
-                            <!-- Percentage Text -->
+                            <!-- Texte du pourcentage -->
                             <span class="absolute inset-0 flex items-center justify-center text-xs font-medium text-blue-500" x-text="`${progress}%`"></span>
                         </div>
-                        <!-- File Name and Size -->
+                        <!-- Nom et taille du fichier -->
                         <div class="text-left">
                             <span x-text="fileName" class="text-sm text-gray-900 truncate block"></span>
                             <span x-text="fileSize" class="text-xs text-gray-500"></span>
@@ -180,10 +201,10 @@ new class extends Component {
                 </div>
             </template>
 
-            <!-- File Preview -->
+            <!-- Aperçu du fichier -->
             <template x-if="filePreview && !isLoading">
                 <div class="absolute inset-0 flex items-center justify-between bg-white bg-opacity-90 rounded-lg p-2">
-                    <!-- File Icon based on file extension -->
+                    <!-- Icône du fichier basée sur l'extension -->
                     <div class="flex items-center space-x-2">
                         <template x-if="fileType === 'pdf'">
                             <i class="fas fa-file-pdf text-red-500 text-2xl"></i>
@@ -205,7 +226,7 @@ new class extends Component {
                         </template>
                         <span x-text="fileName" class="text-sm text-gray-900 truncate"></span>
                     </div>
-                    <!-- Remove Button (X Icon) -->
+                    <!-- Bouton de suppression (icône X) -->
                     <button 
                         type="button" 
                         class="text-gray-400 hover:text-red-500"
@@ -214,7 +235,7 @@ new class extends Component {
                             fileName = '';
                             fileSize = '';
                             isSuccess = false;
-                            $wire.resetFile(); // Call the resetFile method
+                            $wire.resetFile(); // Appelle la méthode resetFile
                         "
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -224,7 +245,7 @@ new class extends Component {
                 </div>
             </template>
 
-            <!-- Upload Icon and Instructions -->
+            <!-- Icône de téléchargement et instructions -->
             <template x-if="!filePreview && !isLoading">
                 <div class="text-center flex flex-col items-center">
                     <svg 
@@ -243,7 +264,7 @@ new class extends Component {
                 </div>
             </template>
 
-            <!-- Hidden File Input -->
+            <!-- Champ de fichier caché -->
             <input 
                 type="file" 
                 id="file" 
@@ -251,23 +272,27 @@ new class extends Component {
                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 x-on:change="
                     fileName = $event.target.files[0].name;
-                    fileSize = ($event.target.files[0].size / 1024).toFixed(2) + ' KB'; // Convert to KB
+                    fileSize = ($event.target.files[0].size / 1024).toFixed(2) + ' KB'; // Convertit en KB
                     filePreview = URL.createObjectURL($event.target.files[0]);
-                    fileType = fileName.split('.').pop().toLowerCase(); // Extract file extension
+                    fileType = fileName.split('.').pop().toLowerCase(); // Extrait l'extension du fichier
                 "
             />
         </div>
 
-        <!-- Error Message -->
+        <!-- Message d'erreur -->
         @if ($hasError)
             <span class="text-red-500 text-xs mt-2 text-center block">{{ $errorMessage }}</span>
         @endif
     </div>
 
-    <!-- Success Message -->
+    <!-- Message de succès -->
     @if (session()->has('message'))
         <div class="mt-2 p-2 bg-green-100 border border-green-400 text-green-700 rounded text-center text-xs">
             {{ session('message') }}
+        </div>
+    @elseif (session()->has('error'))
+        <div class="mt-2 p-2 bg-red-100 border border-red-400 text-red-700 rounded text-center text-xs">
+            {{ session('error') }}
         </div>
     @endif
 </div>

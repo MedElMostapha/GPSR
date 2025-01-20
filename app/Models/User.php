@@ -49,6 +49,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Publication::class);
     }
+    public function numberOfPublicationsPublished()
+    {
+        return $this->publications()->where('isPublished', true)->count();
+    }
     public function mobilites()
     {
         return $this->hasMany(Mobilite::class);

@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
+use Illuminate\Validation\Rule;
 
 new class extends Component {
     use WithFileUploads; // For handling file uploads
@@ -15,9 +16,19 @@ new class extends Component {
     public string $location; // Storage location
     public string $objet; // Object identifier
 
-    protected $rules = [
-        'file' => 'required|file|mimes:pdf,doc,docx|max:10240', // PDF, DOC, DOCX, max 10MB
-    ];
+    public $type=['pdf','doc','docx'];
+
+    protected function rules()
+    {
+        return [
+            'file' => [
+                'required',
+                'file',
+                'mimes:' . implode(',', $this->type), // Dynamically set the MIME types
+                'max:10240', // Maximum size in kilobytes (10MB)
+            ],
+        ];
+    }
 
     protected $messages = [
         'file.required' => 'The file is required.',
@@ -29,6 +40,7 @@ new class extends Component {
     {
         // Validate the uploaded file
         $this->validate();
+        // dd($this->file);
 
         // Move the file to permanent storage
         $filePath = $this->file->store($this->location, 'public');

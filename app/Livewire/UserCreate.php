@@ -40,6 +40,7 @@ class UserCreate extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
+            'isValidated' => 1
         ]);
         $user->assignRole('admin');
 

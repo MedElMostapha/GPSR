@@ -2,6 +2,7 @@
 use App\Models\Publication;
 use Livewire\Volt\Component;
 use Carbon\Carbon;
+use \App\Models\User;
 new class extends Component {
     public $publications;
     public $visibleCount = 6; // Number of publications to show initially
@@ -73,6 +74,16 @@ new class extends Component {
         $publication->save();
         $this->publications();
     }
+    public function viewProfile($rowId): void
+    {
+        $user = User::find($rowId);
+
+        $this->redirect(route('show', ['user' => $user]), navigate: true);
+    }
+    public function modifier($publicationId){
+        $publication = Publication::find($publicationId);
+        $this->redirect(route('modifier-publication', ['publication' => $publication]), navigate: true);
+    }
 };
 ?>
 
@@ -118,7 +129,7 @@ new class extends Component {
                         <!-- Actions (Edit, Archive, Delete) -->
                         <div class="absolute top-2 right-2 flex space-x-2">
                             <!-- Edit Icon -->
-                            <button wire:click="editPublication({{ $publication->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
+                            <button wire:click="modifier({{ $publication->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
                                 <i class="fas fa-edit"></i>
                             </button>
         
@@ -255,7 +266,7 @@ new class extends Component {
                                 @if(auth()->user()->hasRole('admin'))
                                 <div class="text-[10px] float-start">
                                 <span class="font-semibold">Publié par :</span>
-                                    <span>{{ $publication->user->name }}</span>
+                                    <span wire:click.prevent="viewProfile({{ $publication->user->id }})" class="text-blue-500 hover:text-blue-700 cursor-pointer">{{ $publication->user->name }}</span>
                                 </div>
                                 @endif
                             </div>
