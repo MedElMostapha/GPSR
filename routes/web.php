@@ -34,8 +34,8 @@ Route::view('publication', 'publication')
     ->name('publication');
 
 Route::view('publication/edit/{publication}', 'modifier-publication')
-    ->middleware(['hasRole:admin'])
-    ->name('modifier-publication');
+->middleware(['auth', 'verified'])
+->name('modifier-publication');
 
 Route::view('mobilite', 'mobilite')
     ->middleware(['auth', 'verified'])

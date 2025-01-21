@@ -63,13 +63,18 @@ new class extends Component
                             <i class="fas fa-book"></i>
                             <span x-show="open" class="transition-all duration-200">{{ __('Publications') }}</span>
                         </x-nav-link>
+                        @if(!auth()->user()->hasRole('admin'))
+
                         <!-- Dropdown Icon -->
                         <i 
                             :class="openSubmenuPublications ? 'fas fa-chevron-down' : 'fas fa-chevron-left'" 
                             class="transition-all duration-200 cursor-pointer" 
                             @click="openSubmenuPublications = !openSubmenuPublications"
                         ></i>
+                        @endif
                     </div>
+
+                    @if(!auth()->user()->hasRole('admin'))
 
                     <!-- Soumission Submenu -->
                     <ul x-show="openSubmenuPublications" x-transition class="pl-6 space-y-2 mt-2">
@@ -85,6 +90,7 @@ new class extends Component
                             </x-nav-link>
                         </li>
                     </ul>
+                    @endif
                 </li>
 
                 <!-- Mobilités Link with Submenu -->
@@ -99,13 +105,18 @@ new class extends Component
                         <i class="fas fa-car"></i>
                         <span x-show="open" class="transition-all duration-200">{{ __('Mobilités') }}</span>
                         </x-nav-link>
+                        @if(!auth()->user()->hasRole('admin'))
+
                         <!-- Dropdown Icon -->
                         <i 
                             :class="openSubmenuMobilites ? 'fas fa-chevron-down' : 'fas fa-chevron-left'" 
                             class="transition-all duration-200 cursor-pointer" 
                             @click="openSubmenuMobilites = !openSubmenuMobilites"
                         ></i>
+                        @endif
                     </div>
+
+                    @if(!auth()->user()->hasRole('admin'))
 
                     <!-- Mobilités Submenu -->
                     <ul x-show="openSubmenuMobilites" x-transition class="pl-6 space-y-2 mt-2">
@@ -121,6 +132,7 @@ new class extends Component
                             </x-nav-link>
                         </li>
                     </ul>
+                    @endif
                 </li>
 
                

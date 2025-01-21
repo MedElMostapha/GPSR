@@ -19,7 +19,7 @@ new #[Layout('layouts.guest')] class extends Component
 
 
             $user = $this->form->user();
-            if($user->isValidated){
+            if($user->isValidated !=null){
                 
                 $this->form->authenticate();
     
