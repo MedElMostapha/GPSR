@@ -12,7 +12,6 @@
         "livewire/flux": "*",
         "livewire/livewire": "^3.5",
         "livewire/volt": "^1.6",
-        "power-components/livewire-powergrid": "^6.1",
         "robsontenorio/mary": "^1.41",
         "spatie/laravel-permission": "^6.10"
     },
