@@ -4,7 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-
+use Livewire\Attributes\On;
 new class extends Component {
     use WithPagination;
 
@@ -32,6 +32,13 @@ new class extends Component {
         $this->actions = $actions; // Assign actions
         $this->columnLabels = $columnLabels; // Assign custom column labels
         $this->booleanColumns = $booleanColumns; // Assign boolean columns
+    }
+
+    #[On('reload')]
+    public function reload(Collection $data){
+
+        $this->data = $data;
+
     }
 
     public function sortBy(string $field): void

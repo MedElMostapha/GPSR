@@ -26,6 +26,11 @@ Route::view('users', 'users')
 Route::view('viewprofile/{user}', 'viewprofile')
     ->middleware(['hasRole:admin'])
     ->name('show');
+
+Route::view('pdf', 'pdf')
+->middleware(['auth', 'verified'])
+->name('pdf');
+
 Route::view('archive', 'archive')
     ->middleware(['auth', 'verified'])
     ->name('archive');
