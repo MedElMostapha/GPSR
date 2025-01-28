@@ -27,6 +27,16 @@ new class extends Component {
                         'isPublished' => 'Etat', // Custom label for 'isValidated'
                         ];
     protected $listeners = ['deletePublication'];
+    public $selectFilters = [
+        'publication_date',
+        'isPublished',
+    ];
+    public $enabledFilters = [
+        'publication_date',
+        'isPublished',
+        'title',
+
+];
 
     // Sync query parameters with component properties
     protected $queryString = [
@@ -215,7 +225,7 @@ public function confirmDelete($publicationId)
 
     $this->publications();
 
-    $this->dispatch('reload',['data' => $this->publications]);
+    $this->dispatch('reload');
 
 
 }
@@ -626,7 +636,9 @@ public function confirmDelete($publicationId)
         class="mt-4">
         <livewire:datatable :data="$publications"
             :columns="$columns"
+            :enabledFilters="$enabledFilters"
             :booleanColumns="$booleanColumns"
+            :selectFilters="$selectFilters"
             :actions="[ 'view', 'delete' ]"
             :columnLabels="$columnLabels" />
     </div>

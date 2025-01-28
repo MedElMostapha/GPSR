@@ -5,6 +5,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\On;
+
 new class extends Component {
     use WithPagination;
 
@@ -17,6 +18,11 @@ new class extends Component {
     public array $booleanColumns = []; // Define boolean columns and their display text
     public Collection $data;
     public array $actions = []; // Define actions (e.g., 'edit', 'delete')
+    public array $filterAttributes = []; // Store filter values for each attribute
+    public array $dateFilters = []; // Store selected years for date attributes
+    public array $enabledFilters = []; // Specify which filters are enabled
+    public array $selectFilters = []; // Specify which filters should be displayed as select inputs and their options
+    public array $selectedYears = []; // Store selected years for multi-year filtering
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -25,20 +31,32 @@ new class extends Component {
         'perPage' => ['except' => 10],
     ];
 
-    public function mount(array $columns, Collection $data, array $actions = [], array $columnLabels = [], array $booleanColumns = []): void
+    public function mount(array $columns, Collection $data, array $actions = [], array $columnLabels = [], array $booleanColumns = [], array $enabledFilters = [], array $selectFilters = []): void
     {
         $this->columns = $columns;
         $this->data = $data;
         $this->actions = $actions; // Assign actions
         $this->columnLabels = $columnLabels; // Assign custom column labels
         $this->booleanColumns = $booleanColumns; // Assign boolean columns
+        $this->enabledFilters = $enabledFilters; // Assign enabled filters
+        $this->selectFilters = $selectFilters; // Assign select filters
     }
 
     #[On('reload')]
-    public function reload(Collection $data){
+    public function reload(): void
+    {
+        // Reset search and filters
+        $this->search = '';
+        $this->filterAttributes = [];
+        $this->dateFilters = [];
+        $this->selectedYears = [];
 
-        $this->data = $data;
+        // If your data is fetched from a database or external source, re-fetch it here
+        // Example:
+        // $this->data = YourDataFetchingLogic::fetchData();
 
+        // Reset pagination to the first page
+        $this->resetPage();
     }
 
     public function sortBy(string $field): void
@@ -73,6 +91,53 @@ new class extends Component {
                     }) !== false;
                 });
             })
+            ->when($this->filterAttributes, function ($collection) {
+    return $collection->filter(function ($item) {
+        foreach ($this->filterAttributes as $column => $value) {
+            // Skip empty values (null, false, etc.)
+            if (!is_null($value)) {
+                $itemValue = $item->$column;
+
+                // Handle boolean comparison
+                if (is_bool($value)) {
+                    if ((bool) $itemValue !== $value) {
+                        return false;
+                    }
+                }
+                // Handle string comparison (case-insensitive)
+                elseif (is_string($value)) {
+                    if (!str_contains(strtolower((string) $itemValue), strtolower($value))) {
+                        return false;
+                    }
+                }
+                // Handle other types (numbers, etc.)
+                else {
+                    if ($itemValue != $value) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    });
+})
+
+            ->when($this->selectedYears, function ($collection) {
+                return $collection->filter(function ($item) {
+                    // Debugging: Log the selected years
+                    $this->js("console.log(" . json_encode($this->selectedYears) . ")");
+
+                    // Ensure selectedYears is an array
+                    $selectedYears = (array) $this->selectedYears;
+
+                    // Check if the item's publication_date exists in the selected years
+                    return in_array($item->publication_date, $selectedYears);
+                });
+            })
+
+
+
+
             ->map(function ($item) {
                 // Ensure roles are displayed as a string
                 if (isset($item['roles']) && (is_array($item['roles']) || is_object($item['roles']))) {
@@ -96,19 +161,16 @@ new class extends Component {
         );
     }
 
-    // Emit events for actions
     public function emitAction(string $action, $id): void
     {
         $this->dispatch($action, id: $id); // Emit the action event
     }
 
-    // Get the display label for a column
     public function getColumnLabel(string $column): string
     {
         return $this->columnLabels[$column] ?? ucfirst($column); // Fallback to column name
     }
 
-    // Get the display text and class for a boolean value
     public function getBooleanDisplayText(string $column, $value): array
     {
         if (isset($this->booleanColumns[$column])) {
@@ -116,10 +178,64 @@ new class extends Component {
         }
         return ['text' => $value, 'class' => '']; // Fallback to raw value with no class
     }
+
+    public function clearFilters(): void
+    {
+        $this->filterAttributes = [];
+        $this->dateFilters = [];
+        $this->selectedYears = [];
+    }
+
+    public function getUniqueYears(string $column): array
+    {
+        return $this->data->pluck($column)->unique()->values()->toArray();
+    }
+
+    public function getSelectOptions(string $column): array
+    {
+        return $this->selectFilters[$column]['options'] ?? [];
+    }
+
+    public function toggleYear(string $column, string $year): void
+    {
+        if (!isset($this->selectedYears[$column])) {
+            $this->selectedYears[$column] = [];
+        }
+
+        if (in_array($year, $this->selectedYears[$column])) {
+            $this->selectedYears[$column] = array_diff($this->selectedYears[$column], [$year]);
+        } else {
+            $this->selectedYears[$column][] = $year;
+        }
+    }
+
+    public function clearFilter($filter, $value = null): void
+    {
+        if ($filter === 'selectedYears' && $value !== null) {
+            // Remove the specific year from the selectedYears array
+            $this->selectedYears = array_diff($this->selectedYears, [$value]);
+        } else {
+            // Clear the entire filter if no specific value is provided
+            $this->$filter = ($filter === 'selectedYears') ? [] : '';
+        }
+
+
+    }
 };
 ?>
 
 <div class="p-6 bg-white rounded-lg shadow-md">
+    @if(!empty($selectedYears))
+    @foreach ($selectedYears as $year)
+    <div class="flex items-center max-w-fit mb-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+        <span>Année : {{ $year }}</span>
+        <button wire:click="clearFilter('selectedYears', '{{ $year }}')"
+            class="ml-2 text-blue-600 hover:text-blue-800">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    @endforeach
+    @endif
     <!-- Search Input -->
     <div class="mb-6 relative">
         <input type="text"
@@ -130,7 +246,7 @@ new class extends Component {
         <!-- Clear Button -->
         @if($search)
         <button wire:click="$set('search', '')"
-            class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700">
+            class="absolute inset-y-0  right-0 px-3 flex items-center text-gray-500 hover:text-gray-700">
             <svg class="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
@@ -143,6 +259,94 @@ new class extends Component {
         </button>
         @endif
     </div>
+
+    <!-- Filter Inputs -->
+    <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        @foreach($columns as $column)
+        @if(in_array($column, $enabledFilters))
+        <div>
+            <label class="block text-sm font-medium text-gray-700">{{ $this->getColumnLabel($column) }}</label>
+            @if(isset($this->booleanColumns[$column]))
+            <select wire:model.change="filterAttributes.{{ $column }}"
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All</option>
+                @foreach($this->booleanColumns[$column] as $key => $details)
+                <option value="{{ $key == 'true' ? 1 : 0 }}">{{ $details['text'] }}</option>
+                @endforeach
+            </select>
+
+            @elseif(isset($this->selectFilters[$column]))
+            <select wire:model.change="filterAttributes.{{ $column }}"
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All</option>
+                @foreach($this->getSelectOptions($column) as $option)
+                <option value="{{ $option }}">{{ $option }}</option>
+                @endforeach
+            </select>
+            @elseif(strpos($column, 'date') !== false)
+
+            <div id="dropdown-{{ $column }}"
+                x-data="{ open: false }"
+                class="flex-1 sm:flex-none">
+                <div class="relative mt-1">
+                    <!-- Dropdown Toggle -->
+                    <button @click="open = !open"
+                        class="w-full flex justify-between items-center border border-gray-300 rounded-md shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <span>
+                            @if(!empty($selectedYears[$column] ?? []))
+                            {{ count($selectedYears[$column]) }} année(s) sélectionnée(s)
+                            @else
+                            Sélectionner des années
+                            @endif
+                        </span>
+                        <i class="fas fa-chevron-down ml-2"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div x-show="open"
+                        @click.away="open = false"
+                        class="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                        <div class="max-h-60 overflow-y-auto py-1 text-sm text-gray-700">
+                            @if(!empty($this->getUniqueYears($column)))
+                            @foreach ($this->getUniqueYears($column) as $year)
+                            @if (!empty($year))
+
+                            <label class="flex items-center px-4 py-2 hover:bg-gray-100">
+                                <input type="checkbox"
+                                    wire:model.change="selectedYears"
+                                    value="{{ $year }}"
+                                    class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-2">{{ $year }}</span>
+                            </label>
+                            @endif
+                            @endforeach
+                            @else
+                            <div class="px-4 py-2">Aucune année disponible</div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @else
+            <input type="text"
+                wire:model.change="filterAttributes.{{ $column }}"
+                placeholder="Filter by {{ $this->getColumnLabel($column) }}"
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            @endif
+        </div>
+        @endif
+        @endforeach
+    </div>
+
+    @if(!empty($enabledFilters))
+    <!-- Clear Filters Button -->
+    <div class="mb-6">
+        <button wire:click="clearFilters"
+            class="btn-xs bg-gray-500 text-white rounded-md hover:bg-gray-600">
+            Clear Filters
+        </button>
+    </div>
+    @endif
 
     <!-- Table -->
     <div class="overflow-x-auto">
@@ -234,6 +438,15 @@ new class extends Component {
                     @endif
                 </tr>
                 @endforeach
+
+                @if(count($this->rows()) === 0)
+                <tr>
+                    <td colspan="{{ count($columns) + count($actions) }}"
+                        class="px-6 py-4 text-sm text-gray-700 text-center">
+                        Aucun donnée disponible
+                    </td>
+                </tr>
+                @endif
             </tbody>
         </table>
     </div>

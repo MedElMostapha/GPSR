@@ -34,13 +34,68 @@ new class extends Component {
         // Logic to handle edit
         $this->dispatch('open-edit-modal', id: $id);
     }
+#[On('delete')]
+public function delete($id)
+{
+    // Use SweetAlert to confirm deletion
+    $this->js("
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'You won\\'t be able to revert this!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Livewire.dispatch('confirmDelete', { id: $id });
+        }
+    });
+");
 
-    // Handle delete action
-    public function delete($id): void
-    {
-        // Logic to handle delete
-        $this->dispatch('open-delete-modal', id: $id);
+}
+
+#[On('confirmDelete')]
+public function confirmDelete($id)
+{
+    // Fetch the publication
+    $user = User::find($id);
+
+    // Ensure the publication exists
+    if (!$user) {
+        $this->js("
+            Swal.fire({
+                title: 'Error!',
+                text: 'user not found or already deleted.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        ");
+        return;
     }
+
+    // Delete the user
+    $user->delete();
+
+    // Refresh the users list
+
+    // Show success message
+    $this->js("
+        Swal.fire({
+            title: 'Deleted!',
+            text: 'Your user has been deleted.',
+            icon: 'success',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    ");
+
+
+    $this->dispatch('reload');
+
+
+}
     #[On('view')]
     public function view($id): void
     {

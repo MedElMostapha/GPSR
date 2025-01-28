@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
 
@@ -44,7 +45,8 @@ class UserCreate extends Component
         ]);
         $user->assignRole('admin');
 
-        $this->dispatch('user-added');
+        $data = collect(User::latest()->get()); // Use collect() to wrap the result in a Collection
+        $this->dispatch('reload',['data' => $data]);
 
         session()->flash('message', 'User added successfully.');
 

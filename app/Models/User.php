@@ -57,4 +57,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(Mobilite::class);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Define the deleting event
+        static::deleting(function ($user) {
+            // Delete all related publications
+            $user->publications()->delete();
+
+            // Delete all related mobilities
+            $user->mobilites()->delete();
+
+            // If there are other relationships, delete them here
+        });
+    }
+
 }

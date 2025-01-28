@@ -109,26 +109,44 @@ new class extends Component
     }
 };
 ?>
-<div class="p-4">
+<div class="p-4 relative">
+    <!-- Back Button -->
     <div class="flex items-center mb-4">
-
         <a href="{{ route('publication', absolute: false) }}"
-            wire:navigate>
-            <i class="fas fa-arrow-left"></i>
-            {{__('Retour')}}
-
+            wire:navigate
+            class="text-blue-500 hover:text-blue-700 flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>
+            {{ __('Retour') }}
         </a>
     </div>
+
+    <!-- Page Title -->
     <h1 class="text-2xl font-bold mb-4">Modifier et visualiser une publication</h1>
 
-    <!-- Success message -->
+    <!-- Top Right Section -->
+    <div class="absolute top-4 right-4 flex items-center space-x-2">
+        <!-- Publication Status -->
+        @if($publication->isPublished)
+        <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full transition duration-150">
+            <i class="fas fa-globe"></i> En ligne
+        </span>
+        @else
+        <button wire:click="publier({{ $publication->id }})"
+            class="btn btn-xs bg-blue-500 border-none text-white hover:bg-blue-600">
+            <i class="fas fa-paper-plane"></i> Publier
+        </button>
+        @endif
+
+
+    </div>
+
+    <!-- Success Message -->
     @if (session()->has('message'))
     <div x-data="{ show: true }"
         x-show="show"
         x-init="setTimeout(() => show = false, 10000)"
         class="bg-green-500 text-white p-4 rounded-md mb-4 flex items-center justify-between">
         <div class="flex items-center">
-            <!-- Icon -->
             <svg xmlns="http://www.w3.org/2000/svg"
                 class="h-6 w-6 mr-2"
                 fill="none"
@@ -156,80 +174,56 @@ new class extends Component
         </button>
     </div>
     @endif
-    @if($publication->isPublished)
-    <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full transition duration-150">
-        <i class="fas fa-globe"></i> En ligne
-    </span>
-    @else
-    <span class="bg-blue-200 text-blue-600 text-xs px-2 py-1 rounded-full transition duration-150">
-        <i class="fas fa-ban"></i> Non publié
-    </span>
-    @endif
-
-    @if (!$publication->isPublished)
-    <button wire:click="publier({{ $publication->id }})"
-        class="btn btn-xs bg-blue-500 border-none text-white hover:bg-green-600">
-        <i class="fas fa-paper-plane"></i>
-        Publier
-    </button>
-    @endif
 
     <!-- Form -->
     <form wire:submit.prevent="editPublication"
         class="space-y-4"
         enctype="multipart/form-data">
-        <!-- Title and Journal in one row at the top -->
+        <!-- Title and Journal Inputs -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Title Input -->
             <div>
                 <label for="title"
-                    class="block text-sm font-medium">Titre</label>
+                    class="block text-sm font-medium text-gray-700">Titre</label>
                 <input type="text"
                     id="title"
                     wire:model.defer="title"
-                    class="input input-bordered bg-white w-full" />
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
                 @error('title')
                 <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
             </div>
-
-            <!-- Journal Input -->
             <div>
                 <label for="journal"
-                    class="block text-sm font-medium">Journal</label>
+                    class="block text-sm font-medium text-gray-700">Journal</label>
                 <input type="text"
                     id="journal"
                     wire:model.defer="journal"
-                    class="input input-bordered bg-white w-full" />
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
                 @error('journal')
                 <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
             </div>
         </div>
 
-        <!-- Abstract in the middle -->
+        <!-- Abstract Input -->
         <div>
             <label for="abstract"
-                class="block text-sm font-medium">Description</label>
+                class="block text-sm font-medium text-gray-700">Description</label>
             <textarea id="abstract"
                 wire:model.defer="abstract"
-                class="textarea bg-white textarea-bordered w-full"></textarea>
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"></textarea>
         </div>
+
         <!-- File Section -->
         <div class="mt-2 space-y-2">
             @if ($publication->file_path)
             <div class="relative">
-                <!-- Badge for "Consulter" -->
                 <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition duration-150 cursor-pointer"
                     wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->file_path)) }}')">
                     <i class="fas fa-eye"></i>
                 </div>
-
-                <!-- File Name -->
                 <div class="bg-gray-100 p-2 rounded-lg border border-gray-200">
-                    <p class="text-xs text-gray-600 truncate">
-                        Fichier : {{ $publication->file_name }}
-                    </p>
+                    <p class="text-xs text-gray-600 truncate">Article : {{ $publication->file_name }}</p>
                 </div>
             </div>
             @else
@@ -243,17 +237,12 @@ new class extends Component
 
             @if ($publication->rib)
             <div class="relative">
-                <!-- Badge for "Consulter" -->
                 <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full hover:bg-green-600 transition duration-150 cursor-pointer"
                     wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $publication->rib)) }}')">
                     <i class="fas fa-eye"></i>
                 </div>
-
-                <!-- File Name -->
                 <div class="bg-gray-100 p-2 rounded-lg border border-gray-200">
-                    <p class="text-xs text-gray-600 truncate">
-                        RIB : {{ $publication->rib_name }}
-                    </p>
+                    <p class="text-xs text-gray-600 truncate">RIB : {{ $publication->rib_name }}</p>
                 </div>
             </div>
             @else
@@ -264,37 +253,9 @@ new class extends Component
                 </span>
             </p>
             @endif
-
-            @if($publication->isPublished)
-            <!-- Publication Date -->
-            <div class="text-[10px] bg-blue-500 w-fit px-2 py-1 rounded-[5px] text-gray-600">
-                <span class="font-semibold text-white">Date de publication :</span>
-                <span class="text-black">{{
-                    \Carbon\Carbon::parse($publication->publication_date)->locale('fr')->isoFormat('LL')
-                    }}</span>
-            </div>
-            @endif
-
-            <!-- Created At -->
-            <div class="text-gray-500">
-                <div class="text-[10px] float-end">
-                    <span class="font-semibold">Créé :</span>
-                    {{ $publication->created_at->locale('fr')->diffForHumans() }}
-                </div>
-
-                @if(auth()->user()->hasRole('admin'))
-                <div class="text-[10px] float-start">
-                    <span class="font-semibold">Publié par :</span>
-                    <span wire:click.prevent="viewProfile({{ $publication->user->id }})"
-                        class="text-blue-500 hover:text-blue-700 cursor-pointer">{{
-                        $publication->user->name
-                        }}</span>
-                </div>
-                @endif
-            </div>
         </div>
 
-        <!-- File Upload Inputs in one row at the bottom -->
+        <!-- File Upload Inputs -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             @foreach ($objects as $index => $objet)
             <div wire:key="{{ $objet }}-{{ $index }}">
@@ -306,7 +267,7 @@ new class extends Component
             @endforeach
         </div>
 
-        <!-- Buttons -->
+        <!-- Form Buttons -->
         <div class="flex justify-end">
             <button type="reset"
                 class="btn-sm rounded bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset</button>
