@@ -34,7 +34,6 @@ new class extends Component {
     public $enabledFilters = [
         'publication_date',
         'isPublished',
-        'title',
 
 ];
 
@@ -640,6 +639,7 @@ public function confirmDelete($publicationId)
             :booleanColumns="$booleanColumns"
             :selectFilters="$selectFilters"
             :actions="[ 'view', 'delete' ]"
+            :enableSearch="true"
             :columnLabels="$columnLabels" />
     </div>
 

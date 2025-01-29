@@ -23,6 +23,7 @@ new class extends Component {
     public array $enabledFilters = []; // Specify which filters are enabled
     public array $selectFilters = []; // Specify which filters should be displayed as select inputs and their options
     public array $selectedYears = []; // Store selected years for multi-year filtering
+    public bool $enableSearch=false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -236,29 +237,36 @@ new class extends Component {
     </div>
     @endforeach
     @endif
-    <!-- Search Input -->
-    <div class="mb-6 relative">
-        <input type="text"
-            wire:model.change="search"
-            placeholder="Search..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10" />
 
-        <!-- Clear Button -->
-        @if($search)
-        <button wire:click="$set('search', '')"
-            class="absolute inset-y-0  right-0 px-3 flex items-center text-gray-500 hover:text-gray-700">
-            <svg class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        @endif
+    @if ($this->enableSearch)
+
+    <!-- Search Input -->
+    <div class="mb-6 w-full relative ">
+        <div class="flex justify-end">
+
+            <input type="text"
+                wire:model.change="search"
+                placeholder="Search..."
+                class="max-w-[40%] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10" />
+
+            <!-- Clear Button -->
+            @if($search)
+            <button wire:click="$set('search', '')"
+                class="absolute inset-y-0  right-0 px-3 flex items-center text-gray-500 hover:text-gray-700">
+                <svg class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            @endif
+        </div>
     </div>
+    @endif
 
     <!-- Filter Inputs -->
     <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
