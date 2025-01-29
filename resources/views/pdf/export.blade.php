@@ -4,6 +4,18 @@
 <head>
     <title>PDF Export</title>
     <style>
+        /* Center the image in the header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        /* Table styling */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -24,7 +36,13 @@
 </head>
 
 <body>
-    <h1>Exported Data</h1>
+    <!-- Header with centered image -->
+    <div class="header">
+        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo.png')))}}"
+            alt="Logo">
+    </div>
+
+    <!-- Table -->
     <table>
         <thead>
             <tr>

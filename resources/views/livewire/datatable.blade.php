@@ -370,7 +370,6 @@ new class extends Component {
                     class="btn btn-xs bg-blue-500 text-white rounded-md border-none hover:bg-blue-600">
                     <i class="fas fa-file-pdf"></i> Export to PDF
                 </button>
-
             </div>
             @endif
 
