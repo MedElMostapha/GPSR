@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('journal');
             $table->boolean('isArchived')->default(false);
             $table->boolean('isPublished')->default(false);
+            $table->boolean('isAccepted')->default(false);
+            $table->enum('type', ['WEB SCIENCE', 'SCOPUS'])->default('WEB SCIENCE');
+            $table->integer('prix')->nullable();
+            $table->string('motifs')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('file_path')->nullable();
             $table->string('file_name')->nullable();

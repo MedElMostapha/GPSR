@@ -45,13 +45,11 @@ class UserCreate extends Component
         ]);
         $user->assignRole('admin');
 
-        $data = collect(User::latest()->get()); // Use collect() to wrap the result in a Collection
-        $this->dispatch('reload',['data' => $data]);
-
-        session()->flash('message', 'User added successfully.');
-
         $this->closeModal();
+
+        $this->dispatch('reload');
     }
+
 
     private function resetInputFields()
     {

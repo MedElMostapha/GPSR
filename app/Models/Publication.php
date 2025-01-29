@@ -19,7 +19,11 @@ class Publication extends Model
         'file_name',
         'rib_name',
         'isArchived',
-        'isPublished'
+        'isPublished',
+        'isAccepted',
+        'motifs',
+        'prix',
+        'type',
     ];
 
 

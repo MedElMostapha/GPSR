@@ -51,13 +51,10 @@ new class extends Component {
         $this->filterAttributes = [];
         $this->dateFilters = [];
         $this->selectedYears = [];
-
-        // If your data is fetched from a database or external source, re-fetch it here
-        // Example:
-        // $this->data = YourDataFetchingLogic::fetchData();
-
-        // Reset pagination to the first page
         $this->resetPage();
+
+
+
     }
 
     public function sortBy(string $field): void

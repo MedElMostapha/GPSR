@@ -19,6 +19,8 @@ new class extends Component
     public $ribFile; // For RIB file upload
     public $rib_name;
     public $objects = ['Article', 'Rib'];
+    public $motif="";
+    public $type='';
 
 
     public function mount(Publication $publication)
@@ -32,6 +34,7 @@ new class extends Component
         $this->file_name = $publication->file_name;
         $this->ribFile = $publication->rib;
         $this->rib_name = $publication->rib_name;
+        $this->type=$publication->type;
     }
 
     #[On('file-uploaded')]
@@ -55,6 +58,7 @@ new class extends Component
             'title' => 'required|string|max:255',
             'abstract' => 'nullable|string',
             'journal' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
         ]);
 
         // Handle file upload
@@ -79,7 +83,10 @@ new class extends Component
             'file_path' => $this->articleFile, // Store article file path
             'rib' => $this->ribFile, // Store RIB file path
             'file_name' => $this->file_name,
-            'rib_name' => $this->rib_name
+            'rib_name' => $this->rib_name,
+            'type'=>$this->type,
+            'prix'=>$this->type =='WEB SCIENCE' ? 4000 : 2000,
+
         ]);
 
         // Flash success message to session
@@ -107,6 +114,19 @@ new class extends Component
         $publication->save();
         $this->publication=$publication;
     }
+
+    public function valider($publicationId){
+        $publication = Publication::find($publicationId);
+        $publication->isAccepted = true;
+        $publication->save();
+        $this->publication=$publication;
+    }
+
+    public function refuser(){
+        $this->publication->isAccepted = false;
+        $this->publication->motifs = $this->motif;
+        $this->publication->save();
+    }
 };
 ?>
 <div class="p-4 relative">
@@ -121,21 +141,93 @@ new class extends Component
     </div>
 
     <!-- Page Title -->
-    <h1 class="text-2xl font-bold mb-4">Modifier et visualiser une publication</h1>
+    <h1 class="text-2xl font-bold mb-4">{{__('Modifier et visualiser une publication')}}</h1>
 
     <!-- Top Right Section -->
     <div class="absolute top-4 right-4 flex items-center space-x-2">
+
         <!-- Publication Status -->
-        @if($publication->isPublished)
-        <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full transition duration-150">
-            <i class="fas fa-globe"></i> En ligne
+        @if($publication->isPublished && !$publication->isAccepted && empty($publication->motifs))
+        <span class="bg-yellow-200 text-yellow-600 text-xs px-2 py-1 rounded-md transition duration-150">
+            <i class="fas fa-clock"></i> {{__('En cours de revision')}}
         </span>
-        @else
+        @elseif($publication->isPublished && $publication->isAccepted)
+        <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-md transition duration-150">
+            <i class="fas fa-globe"></i> {{__('En ligne')}}
+        </span>
+        @elseif($publication->isPublished && !$publication->isAccepted && !empty($publication->motifs))
+        <span class="bg-red-200 text-red-600 text-xs px-2 py-1 rounded-md transition duration-150">
+            <i class="fas fa-times"></i> {{__('Refusée')}}
+            par motif : {{ $publication->motifs }}
+
+        </span>
+        @endif
+        @if(!$publication->isPublished )
         <button wire:click="publier({{ $publication->id }})"
             class="btn btn-xs bg-blue-500 border-none text-white hover:bg-blue-600">
-            <i class="fas fa-paper-plane"></i> Publier
+            <i class="fas fa-paper-plane"></i>{{__('Publier')}}
         </button>
         @endif
+
+        @if (auth()->user()->hasRole('admin') && $publication->isPublished && !$publication->isAccepted)
+
+        <div x-data="{ open: false, selectedId: null, motif: '' }">
+
+
+            @if($publication->isPublished && auth()->user()->hasRole('admin'))
+            <!-- Boutons Valider / Refuser -->
+            <button wire:click="valider({{ $publication->id }})"
+                class="btn btn-xs bg-green-500 hover:bg-green-600 text-white border-none transition duration-150">
+                <i class="fas fa-check"></i> Valider
+            </button>
+
+            <button @click="open = true; selectedId = {{ $publication->id }}"
+                class="btn btn-xs bg-red-500 hover:bg-red-600 text-white border-none transition duration-150">
+                <i class="fas fa-times"></i> Refuser
+            </button>
+            @endif
+
+
+            <!-- Modal Alpine.js -->
+            <div x-show="open"
+                class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50"
+                x-cloak>
+
+                <div class="bg-white p-5 rounded-lg shadow-lg w-1/3">
+                    <h2 class="text-lg font-semibold text-gray-700">Motif du refus</h2>
+
+                    <form action=""
+                        wire:submit='refuser'>
+
+                        <!-- Textarea pour saisir le motif -->
+                        <textarea x-model="motif"
+                            wire:model.defer="motif"
+                            class="w-full border p-2 mt-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Expliquez la raison du refus...">
+                        </textarea>
+
+                        <div class="mt-4 flex justify-end">
+                            <button @click="open = false"
+                                class="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-md mr-2">
+                                Annuler
+                            </button>
+
+                            <button @click="$wire.refuser(selectedId, motif); open = false"
+                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md">
+                                Confirmer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+
+
+
+
+
+
 
 
     </div>
@@ -205,6 +297,24 @@ new class extends Component
             </div>
         </div>
 
+        <!-- Type Input -->
+        <div>
+            <label for="type"
+                class="block text-sm font-medium">Type</label>
+            <select id="type"
+                wire:model="type"
+                class="input input-bordered bg-white w-full">
+                <option value="">Type</option>
+                <option value="WEB SCIENCE">WEB SCIENCE</option>
+                <option value="SCOPUS">SCOPUS</option>
+            </select>
+            @error('type')
+            <span class="text-red-500 text-sm">{{ $message }}</span>
+            @enderror
+        </div>
+
+
+
         <!-- Abstract Input -->
         <div>
             <label for="abstract"
@@ -267,7 +377,8 @@ new class extends Component
             @endforeach
         </div>
 
-        <!-- Form Buttons -->
+
+        @if (!auth()->user()->hasRole('admin'))
         <div class="flex justify-end">
             <button type="reset"
                 class="btn-sm rounded bg-red-600 border-none text-white hover:bg-red-500 mr-2">Reset</button>
@@ -281,5 +392,8 @@ new class extends Component
                     wire:target="createPublication"></x-mary-loading>
             </x-primary-button>
         </div>
+
+        @endif
+        <!-- Form Buttons -->
     </form>
 </div>
