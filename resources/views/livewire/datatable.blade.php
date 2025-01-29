@@ -29,6 +29,7 @@ new class extends Component {
     public bool $enableSearch = false;
     public bool $pdfEnabled = false;
     public bool $excelEnabled = false;
+    public int $total;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -139,20 +140,21 @@ new class extends Component {
     }
 
     public function exportPdf()
-    {
-        $filteredData = $this->rows()->getCollection();
+{
+    $filteredData = $this->rows()->getCollection();
 
-        $pdf = Pdf::loadView('pdf.export', [
-            'data' => $filteredData,
-            'columns' => $this->columns,
-            'columnLabels' => $this->columnLabels,
-            'booleanColumns' => $this->booleanColumns
-        ]);
+    $pdf = Pdf::loadView('pdf.export', [
+        'data' => $filteredData,
+        'columns' => $this->columns,
+        'columnLabels' => $this->columnLabels,
+        'booleanColumns' => $this->booleanColumns,
+        'total' => $this->total // Pass the total to the PDF template
+    ]);
 
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->stream();
-        }, 'export.pdf');
-    }
+    return response()->streamDownload(function () use ($pdf) {
+        echo $pdf->stream();
+    }, 'export.pdf');
+}
 
     public function emitAction(string $action, $id): void
     {
@@ -494,6 +496,18 @@ new class extends Component {
                 </tr>
                 @endif
             </tbody>
+
+            <!-- Table Footer for Total -->
+            @if (isset($total))
+            <tfoot>
+                <tr class="bg-gray-100">
+                    <td colspan="{{ count($columns) + count($actions) }}"
+                        class="px-6 py-4 text-sm font-bold text-gray-700 text-center">
+                        Total: {{ $total }}
+                    </td>
+                </tr>
+            </tfoot>
+            @endif
         </table>
     </div>
 

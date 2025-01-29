@@ -652,6 +652,7 @@ public function confirmDelete($publicationId)
             :booleanColumns="$booleanColumns"
             :selectFilters="$selectFilters"
             :actions="[ 'view', 'delete' ]"
+            :total="10000"
             :enableSearch="true"
             :columnLabels="$columnLabels" />
     </div>

@@ -1,48 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>PDF Export</title>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+    <title>Export PDF</title>
     <style>
-        /* Center the image in the header */
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+        body {
+            font-family: Arial, sans-serif;
         }
 
-        .header img {
-            max-width: 200px;
-            height: auto;
-        }
-
-        /* Table styling */
         table {
             width: 100%;
             border-collapse: collapse;
-        }
-
-        table,
-        th,
-        td {
-            border: 1px solid black;
+            margin-bottom: 20px;
         }
 
         th,
         td {
+            border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .total {
+            font-weight: bold;
+            text-align: right;
+            margin-top: 20px;
         }
     </style>
 </head>
 
 <body>
-    <!-- Header with centered image -->
-    <div class="header">
-        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo.png')))}}"
-            alt="Logo">
-    </div>
-
-    <!-- Table -->
+    <h1>Exported Data</h1>
     <table>
         <thead>
             <tr>
@@ -71,6 +66,12 @@
             @endforeach
         </tbody>
     </table>
+
+    @if(isset($total))
+    <div class="total">
+        Total: {{ $total }}
+    </div>
+    @endif
 </body>
 
 </html>
