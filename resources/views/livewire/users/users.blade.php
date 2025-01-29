@@ -13,6 +13,17 @@ new class extends Component {
         'isValidated' => 'Etat', // Custom label for 'isValidated'
         'roles' => 'Fonction', // Custom label for 'roles'
     ];
+    public $filterautorizee = [
+            'name',
+            'isValidated'
+
+    ];
+
+    public $filterByselect=[
+        'isValidated'
+
+
+];
     public $booleanColumns = [
         'isValidated' => [
         'true' => ['text' => 'Activé', 'class' => 'bg-green-100 text-green-800'],
@@ -108,6 +119,8 @@ public function confirmDelete($id)
     <!-- Pass the $columns, $columnLabels, and $actions variables to the data-table component -->
     <livewire:datatable :columns="$columns"
         :data="$users"
+        :enabledFilters="$filterautorizee"
+        :selectFilters="$filterByselect"
         :actions="[ 'delete', 'view']"
         :booleanColumns="$booleanColumns"
         :columnLabels="$columnLabels" />

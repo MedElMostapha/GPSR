@@ -28,19 +28,21 @@ Route::view('viewprofile/{user}', 'viewprofile')
     ->name('show');
 
 Route::view('pdf', 'pdf')
-->middleware(['auth', 'verified'])
-->name('pdf');
+    ->middleware(['auth', 'verified'])
+    ->name('pdf');
 
 Route::view('archive', 'archive')
     ->middleware(['auth', 'verified'])
     ->name('archive');
+
+
 Route::view('publication', 'publication')
     ->middleware(['auth', 'verified'])
     ->name('publication');
 
 Route::view('publication/edit/{publication}', 'modifier-publication')
-->middleware(['auth', 'verified'])
-->name('modifier-publication');
+    ->middleware(['auth', 'verified'])
+    ->name('modifier-publication');
 
 Route::view('mobilite', 'mobilite')
     ->middleware(['auth', 'verified'])

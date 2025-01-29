@@ -15,16 +15,23 @@ new class extends Component {
     public $statusFilter = ''; // Store selected status for filtering
     public $searchQuery = ''; // Store search query for filtering
     public $availableYears = []; // Store available years for selection
-    public $columns=['title','journal','publication_date','isPublished'];
+    public $columns=['title','journal','publication_date','isPublished' ,'type','prix' ,'isAccepted'];
     public $booleanColumns=['isPublished'=>[
                             'true'=> ['text'=>'Publiée', 'class'=>'bg-green-100 text-green-800'],
-                            'false'=>['text'=>'Non publiée', 'class'=>'bg-red-100 text-red-800'],
-                        ],
+                            'false'=>['text'=>'Non publiée', 'class'=>'bg-red-100 text-red-800'],],
+                            'isAccepted'=>[
+                                'true'=>['text'=>'Validé','class'=>'bg-green-100 text-green-800'],
+                                'false'=>['text'=>'No validé','class'=>'bg-red-100 text-red-800']
+                            ]
                         ];
+
+
     public $columnLabels = [
                         'title' => 'Titre', // Custom label for 'name'
                         'publication_date' => 'Date de publication', // Custom label for 'email'
                         'isPublished' => 'Etat', // Custom label for 'isValidated'
+                        'isAccepted'=>'Acceptations'
+
                         ];
     protected $listeners = ['deletePublication'];
     public $selectFilters = [
@@ -35,7 +42,7 @@ new class extends Component {
         'publication_date',
         'isPublished',
 
-];
+    ];
 
     // Sync query parameters with component properties
     protected $queryString = [
@@ -264,6 +271,9 @@ public function confirmDelete($publicationId)
         // Use Livewire's redirect method to ensure wire:navigate is used
         return $this->redirect(route('modifier-publication', ['publication' => $publication]), navigate: true);
     }
+
+
+
     public function viewFile($fileUrl)
     {
         // Redirect to the 'pdf' route with the fileUrl parameter
@@ -633,8 +643,11 @@ public function confirmDelete($publicationId)
         x-transition:leave-start="opacity-100 transform scale-100"
         x-transition:leave-end="opacity-0 transform scale-95"
         class="mt-4">
+
         <livewire:datatable :data="$publications"
             :columns="$columns"
+            :pdfEnabled='true'
+            :excelEnabled='true'
             :enabledFilters="$enabledFilters"
             :booleanColumns="$booleanColumns"
             :selectFilters="$selectFilters"

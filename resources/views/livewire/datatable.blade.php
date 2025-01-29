@@ -5,6 +5,9 @@ use Livewire\WithPagination;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\On;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DataExport;
 
 new class extends Component {
     use WithPagination;
@@ -14,16 +17,18 @@ new class extends Component {
     public string $sortDirection = 'asc';
     public int $perPage = 10;
     public array $columns = [];
-    public array $columnLabels = []; // Custom labels for columns
-    public array $booleanColumns = []; // Define boolean columns and their display text
+    public array $columnLabels = [];
+    public array $booleanColumns = [];
     public Collection $data;
-    public array $actions = []; // Define actions (e.g., 'edit', 'delete')
-    public array $filterAttributes = []; // Store filter values for each attribute
-    public array $dateFilters = []; // Store selected years for date attributes
-    public array $enabledFilters = []; // Specify which filters are enabled
-    public array $selectFilters = []; // Specify which filters should be displayed as select inputs and their options
-    public array $selectedYears = []; // Store selected years for multi-year filtering
-    public bool $enableSearch=false;
+    public array $actions = [];
+    public array $filterAttributes = [];
+    public array $dateFilters = [];
+    public array $enabledFilters = [];
+    public array $selectFilters = [];
+    public array $selectedYears = [];
+    public bool $enableSearch = false;
+    public bool $pdfEnabled = false;
+    public bool $excelEnabled = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -36,25 +41,21 @@ new class extends Component {
     {
         $this->columns = $columns;
         $this->data = $data;
-        $this->actions = $actions; // Assign actions
-        $this->columnLabels = $columnLabels; // Assign custom column labels
-        $this->booleanColumns = $booleanColumns; // Assign boolean columns
-        $this->enabledFilters = $enabledFilters; // Assign enabled filters
-        $this->selectFilters = $selectFilters; // Assign select filters
+        $this->actions = $actions;
+        $this->columnLabels = $columnLabels;
+        $this->booleanColumns = $booleanColumns;
+        $this->enabledFilters = $enabledFilters;
+        $this->selectFilters = $selectFilters;
     }
 
     #[On('reload')]
     public function reload(): void
     {
-        // Reset search and filters
         $this->search = '';
         $this->filterAttributes = [];
         $this->dateFilters = [];
         $this->selectedYears = [];
         $this->resetPage();
-
-
-
     }
 
     public function sortBy(string $field): void
@@ -74,70 +75,49 @@ new class extends Component {
             ->when($this->search, function ($collection) {
                 return $collection->filter(function ($item) {
                     return collect($item)->search(function ($value, $key) {
-                        // Skip the 'id' field from the search
                         if ($key === 'id') {
-                            return false; // Skip the 'id' field
+                            return false;
                         }
 
-                        // Handle non-string values
                         if (is_array($value) || is_object($value)) {
-                            return false; // Skip arrays and objects
+                            return false;
                         }
 
-                        // Convert value to string for comparison
                         return stripos((string) $value, $this->search) !== false;
                     }) !== false;
                 });
             })
             ->when($this->filterAttributes, function ($collection) {
-    return $collection->filter(function ($item) {
-        foreach ($this->filterAttributes as $column => $value) {
-            // Skip empty values (null, false, etc.)
-            if (!is_null($value)) {
-                $itemValue = $item->$column;
+                return $collection->filter(function ($item) {
+                    foreach ($this->filterAttributes as $column => $value) {
+                        if (!is_null($value)) {
+                            $itemValue = $item->$column;
 
-                // Handle boolean comparison
-                if (is_bool($value)) {
-                    if ((bool) $itemValue !== $value) {
-                        return false;
+                            if (is_bool($value)) {
+                                if ((bool) $itemValue !== $value) {
+                                    return false;
+                                }
+                            } elseif (is_string($value)) {
+                                if (!str_contains(strtolower((string) $itemValue), strtolower($value))) {
+                                    return false;
+                                }
+                            } else {
+                                if ($itemValue != $value) {
+                                    return false;
+                                }
+                            }
+                        }
                     }
-                }
-                // Handle string comparison (case-insensitive)
-                elseif (is_string($value)) {
-                    if (!str_contains(strtolower((string) $itemValue), strtolower($value))) {
-                        return false;
-                    }
-                }
-                // Handle other types (numbers, etc.)
-                else {
-                    if ($itemValue != $value) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    });
-})
-
+                    return true;
+                });
+            })
             ->when($this->selectedYears, function ($collection) {
                 return $collection->filter(function ($item) {
-                    // Debugging: Log the selected years
-                    $this->js("console.log(" . json_encode($this->selectedYears) . ")");
-
-                    // Ensure selectedYears is an array
                     $selectedYears = (array) $this->selectedYears;
-
-                    // Check if the item's publication_date exists in the selected years
                     return in_array($item->publication_date, $selectedYears);
                 });
             })
-
-
-
-
             ->map(function ($item) {
-                // Ensure roles are displayed as a string
                 if (isset($item['roles']) && (is_array($item['roles']) || is_object($item['roles']))) {
                     $item['roles'] = is_array($item['roles']) ? implode(', ', $item['roles']) : $item['roles']->pluck('name')->join(', ');
                 }
@@ -145,7 +125,6 @@ new class extends Component {
             })
             ->sortBy($this->sortField, SORT_REGULAR, $this->sortDirection === 'desc');
 
-        // Manually paginate the collection
         $page = LengthAwarePaginator::resolveCurrentPage();
         $perPage = $this->perPage;
         $results = $filteredData->slice(($page - 1) * $perPage, $perPage)->values();
@@ -159,14 +138,30 @@ new class extends Component {
         );
     }
 
+    public function exportPdf()
+    {
+        $filteredData = $this->rows()->getCollection();
+
+        $pdf = Pdf::loadView('pdf.export', [
+            'data' => $filteredData,
+            'columns' => $this->columns,
+            'columnLabels' => $this->columnLabels,
+            'booleanColumns' => $this->booleanColumns
+        ]);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'export.pdf');
+    }
+
     public function emitAction(string $action, $id): void
     {
-        $this->dispatch($action, id: $id); // Emit the action event
+        $this->dispatch($action, id: $id);
     }
 
     public function getColumnLabel(string $column): string
     {
-        return $this->columnLabels[$column] ?? ucfirst($column); // Fallback to column name
+        return $this->columnLabels[$column] ?? ucfirst($column);
     }
 
     public function getBooleanDisplayText(string $column, $value): array
@@ -174,7 +169,7 @@ new class extends Component {
         if (isset($this->booleanColumns[$column])) {
             return $value ? $this->booleanColumns[$column]['true'] : $this->booleanColumns[$column]['false'];
         }
-        return ['text' => $value, 'class' => '']; // Fallback to raw value with no class
+        return ['text' => $value, 'class' => ''];
     }
 
     public function clearFilters(): void
@@ -210,19 +205,26 @@ new class extends Component {
     public function clearFilter($filter, $value = null): void
     {
         if ($filter === 'selectedYears' && $value !== null) {
-            // Remove the specific year from the selectedYears array
             $this->selectedYears = array_diff($this->selectedYears, [$value]);
         } else {
-            // Clear the entire filter if no specific value is provided
             $this->$filter = ($filter === 'selectedYears') ? [] : '';
         }
+    }
 
-
+    public function exportExcel()
+    {
+        $filteredData = $this->rows()->getCollection();
+        return Excel::download(new DataExport($filteredData, $this->columns, $this->columnLabels, $this->booleanColumns), 'export.xlsx');
     }
 };
 ?>
 
 <div class="p-6 bg-white rounded-lg shadow-md">
+    <!-- Other UI elements -->
+
+
+
+    <!-- Rest of your UI -->
     @if(!empty($selectedYears))
     @foreach ($selectedYears as $year)
     <div class="flex items-center max-w-fit mb-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
@@ -343,15 +345,55 @@ new class extends Component {
         @endforeach
     </div>
 
-    @if(!empty($enabledFilters))
-    <!-- Clear Filters Button -->
-    <div class="mb-6">
-        <button wire:click="clearFilters"
-            class="btn-xs bg-gray-500 text-white rounded-md hover:bg-gray-600">
-            Clear Filters
-        </button>
+    <div class="flex items-center gap-4">
+
+        <div>
+            @if(!empty($enabledFilters))
+            <!-- Clear Filters Button -->
+            <div class="mb-6">
+                <button wire:click="clearFilters"
+                    class="btn-xs bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                    Clear Filters
+                </button>
+            </div>
+            @endif
+        </div>
+
+        <div>
+
+            @if ($pdfEnabled)
+
+            <div class="mb-6 ">
+
+                <!-- Add the PDF export button -->
+                <button wire:click="exportPdf"
+                    class="btn btn-xs bg-blue-500 text-white rounded-md border-none hover:bg-blue-600">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+
+            </div>
+            @endif
+
+        </div>
+
+        <div>
+
+            @if ($excelEnabled)
+
+            <!-- Excel Export Button -->
+            <div class="mb-6">
+                <button wire:click="exportExcel"
+                    class="btn btn-xs bg-green-500 text-white rounded-md border-none hover:bg-green-600">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+            @endif
+        </div>
+
     </div>
-    @endif
+
+
+
 
     <!-- Table -->
     <div class="overflow-x-auto">
