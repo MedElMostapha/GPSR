@@ -43,7 +43,7 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('dashboard')"
                         :active="request()->routeIs('dashboard')"
-                        wire:navigate
+                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-home"></i>
                         <span x-show="open"
@@ -56,7 +56,7 @@ new class extends Component
                     <div class="flex items-center justify-between space-x-5">
                         <x-nav-link :href="route('publication')"
                             :active="request()->routeIs('publication')"
-                            wire:navigate
+                            wire:navigate.hover
                             class="flex items-center space-x-2">
                             <i class="fas fa-book"></i>
                             <span x-show="open"
@@ -80,7 +80,7 @@ new class extends Component
                         <li>
                             <x-nav-link :href="route('soumission')"
                                 :active="request()->routeIs('soumission')"
-                                wire:navigate
+                                wire:navigate.hover
                                 class="flex items-center space-x-2">
                                 <i class="fa-solid fa-arrow-up-from-bracket"></i>
                                 <span x-show="open"
@@ -96,7 +96,7 @@ new class extends Component
                     <div class="flex items-center justify-between space-x-5">
                         <x-nav-link :href="route('mobilite')"
                             :active="request()->routeIs('mobilite')"
-                            wire:navigate
+                            wire:navigate.hover
                             class="flex items-center space-x-2">
                             <i class="fas fa-car"></i>
                             <span x-show="open"
@@ -120,7 +120,7 @@ new class extends Component
                         <li>
                             <x-nav-link :href="route('mobilite-create')"
                                 :active="request()->routeIs('mobilite-create')"
-                                wire:navigate
+                                wire:navigate.hover
                                 class="flex items-center space-x-2">
                                 <i class="fa-solid fa-arrow-up-from-bracket"></i>
                                 <span x-show="open"
@@ -137,7 +137,7 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('archive')"
                         :active="request()->routeIs('archive')"
-                        wire:navigate
+                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-archive"></i>
                         <span x-show="open"
@@ -149,7 +149,7 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('profile')"
                         :active="request()->routeIs('profile')"
-                        wire:navigate
+                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-user"></i>
                         <span x-show="open"
@@ -163,7 +163,7 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('users')"
                         :active="request()->routeIs('users')"
-                        wire:navigate
+                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fa-solid fa-user-gear"></i>
                         <span x-show="open"

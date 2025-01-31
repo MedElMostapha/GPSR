@@ -72,7 +72,7 @@ new class extends Component {
             'file_name' => $this->fileName,
             'date_debut' => $this->date_debut,
             'date_fin' => $this->date_fin,
-            'date_creation' => Carbon::now(),
+            'creation_date' => Carbon::now(),
 
         ]);
 

@@ -21,7 +21,7 @@ new class extends Component {
     public $date_debut;
     public $date_fin;
 
-    public $columns=[ 'labo_accueil','date_debut','date_fin','type' ,'isValidated','date_creation'];
+    public $columns=[ 'labo_accueil','date_debut','date_fin','type' ,'isValidated','creation_date'];
     public $booleanColumns=[
                             'isValidated'=>[
                                 'true'=>['text'=>'Validé','class'=>'bg-green-100 text-green-800'],
@@ -33,14 +33,15 @@ new class extends Component {
                         'date_debut' => 'Date de debut', // Custom label for 'email'
                         'date_fin' => 'Date de fin', // Custom label for 'email'
                         'isValidated'=>'Validation',
+                        'creation_date'=>'Date de creation',
 
                         ];
 
                      public $selectFilters = [
-                        'date_creation',
+                        'creation_date',
                         ];
                         public $enabledFilters = [
-                        'date_creation',
+                        'creation_date',
 
                         ];
 
@@ -56,9 +57,12 @@ new class extends Component {
     {
 
         // Fetch publications for the authenticated user
-        $this->mobilites = auth()->user()->mobilites()->latest()->get();
         if(auth()->user()->hasRole('admin')){
-        $this->mobilites = Mobilite::latest()->get();
+            $this->mobilites = Mobilite::latest()->get();
+        }else{
+            $this->mobilites = auth()->user()->mobilites()->latest()->get();
+            // dd($this->mobilites);
+
         }
     }
 
@@ -379,6 +383,8 @@ new class extends Component {
 
         <livewire:datatable :data="$mobilites"
             :columns="$columns"
+            :pdfEnabled='true'
+            :excelEnabled='true'
             :selectFilters="$selectFilters"
             :enabledFilters="$enabledFilters"
             :booleanColumns="$booleanColumns"

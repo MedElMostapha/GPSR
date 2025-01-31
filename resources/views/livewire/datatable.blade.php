@@ -112,11 +112,30 @@ new class extends Component {
                     return true;
                 });
             })
-            ->when($this->selectedYears, function ($collection) {
-                return $collection->filter(function ($item) {
-                    $selectedYears = (array) $this->selectedYears;
-                    return in_array($item->publication_date, $selectedYears);
-                });
+           ->when($this->selectedYears, function ($collection) {
+            return $collection->filter(function ($item) {
+            $selectedYears = (array) $this->selectedYears;
+
+            $data=$item->toArray();
+
+            // Loop through the $item object
+            foreach ($data as $key => $value) {
+
+            // dd($key,$value);
+            // Check if the value is a date (you may need to adjust this condition based on your date format)
+            if (is_string($value) && strtotime($value) !== false) {
+
+            // Extract the year from the date
+            // Check if the year is in the selectedYears array
+            if (in_array($value, $selectedYears)) {
+            return true;
+            }
+            }
+            }
+
+            // If no date attribute matches the selected years, filter out the item
+            return false;
+            });
             })
             ->map(function ($item) {
                 if (isset($item['roles']) && (is_array($item['roles']) || is_object($item['roles']))) {
@@ -230,7 +249,7 @@ new class extends Component {
     @if(!empty($selectedYears))
     @foreach ($selectedYears as $year)
     <div class="flex items-center max-w-fit mb-2 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
-        <span>Année : {{ $year }}</span>
+        <span>Année : {{ date('Y', strtotime($year)) }}</span>
         <button wire:click="clearFilter('selectedYears', '{{ $year }}')"
             class="ml-2 text-blue-600 hover:text-blue-800">
             <i class="fas fa-times"></i>
@@ -321,11 +340,12 @@ new class extends Component {
                             @if (!empty($year))
 
                             <label class="flex items-center px-4 py-2 hover:bg-gray-100">
+
                                 <input type="checkbox"
                                     wire:model.change="selectedYears"
                                     value="{{ $year }}"
                                     class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                <span class="ml-2">{{ $year }}</span>
+                                <span class="ml-2">{{ date('Y', strtotime($year))}}</span>
                             </label>
                             @endif
                             @endforeach

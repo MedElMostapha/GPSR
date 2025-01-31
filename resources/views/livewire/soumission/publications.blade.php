@@ -108,6 +108,8 @@ new class extends Component {
         }
 
         $this->publications = $query->latest()->get();
+
+        // dd($this->publications);
     }
 
     public function updatedSelectedYears()

@@ -6,25 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Publication extends Model
 {
-    protected $fillable = [
-        'title',
-        'abstract',
-        'publication_date',
-        'journal',
-        'impact_factor',
-        'indexation',
-        'user_id',
-        'file_path',
-        'rib',
-        'file_name',
-        'rib_name',
-        'isArchived',
-        'isPublished',
-        'isAccepted',
-        'motifs',
-        'prix',
-        'type',
-    ];
+    protected $guarded = [];
 
 
     public function user()
@@ -39,8 +21,7 @@ class Publication extends Model
     public function scopeWhereNotIsArchivedAndIsPublished($query)
     {
         return $query->where('isArchived', false)
-            ->where('isPublished', true)
-        ;
+            ->where('isPublished', true);
     }
     public function scopeWhereNotIsArchived($query)
     {
