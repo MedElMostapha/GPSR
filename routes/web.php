@@ -47,9 +47,13 @@ Route::view('publication/edit/{publication}', 'modifier-publication')
 Route::view('mobilite', 'mobilite')
     ->middleware(['auth', 'verified'])
     ->name('mobilite');
+
 Route::view('mobilite-create', 'mobilite-create')
     ->middleware(['auth', 'verified'])
     ->name('mobilite-create');
+Route::view('mobilite-edit/{mobilite}', 'modifier-mobilite')
+    ->middleware(['auth', 'verified'])
+    ->name('mobilite-edit');
 
 Route::view('profile', 'profile')
     ->middleware(['auth'])

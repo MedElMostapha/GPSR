@@ -20,7 +20,30 @@ new class extends Component {
     public $file_name;
     public $date_debut;
     public $date_fin;
-    
+
+    public $columns=[ 'labo_accueil','date_debut','date_fin','type' ,'isValidated','date_creation'];
+    public $booleanColumns=[
+                            'isValidated'=>[
+                                'true'=>['text'=>'Validé','class'=>'bg-green-100 text-green-800'],
+                                'false'=>['text'=>'No validé','class'=>'bg-red-100 text-red-800']
+                            ]
+                        ];
+    public $columnLabels = [
+                        'labo_accueil' => 'Lab d\'accueil', // Custom label for 'name'
+                        'date_debut' => 'Date de debut', // Custom label for 'email'
+                        'date_fin' => 'Date de fin', // Custom label for 'email'
+                        'isValidated'=>'Validation',
+
+                        ];
+
+                     public $selectFilters = [
+                        'date_creation',
+                        ];
+                        public $enabledFilters = [
+                        'date_creation',
+
+                        ];
+
     protected $listeners = ['deleteMobilitie'];
 
     public function mount()
@@ -41,31 +64,23 @@ new class extends Component {
 
     public function viewFile($fileUrl)
     {
-        $this->viewingFileUrl = $fileUrl;
+        // Redirect to the 'pdf' route with the fileUrl parameter
+        return $this->redirect(route('pdf', ['fileUrl' => $fileUrl]), navigate: true);
     }
 
     public function loadMore()
     {
         $this->loading = true; // Set loading to true when starting to load more
         $this->visibleCount += 6; // Increase the count by 6 when "Show More" is clicked
-        
-        // Simulate a delay (you can remove this part in production)
-        // sleep(1);
-        
+
     }
 
-    #[On('file-uploaded')]
-    public function handleFileUpload($event)
-    {
-        $this->file = $event['filePath'];
-        $this->file_name = $event['fileName'];
-        // dd($this->file,$this->fileName);
-        
-    }
-    public function deleteMobilitie($mobilitieId)
+
+    #[On('delete')]
+    public function deleteMobilitie($id)
     {
         // Find the publication by ID
-        $mobilitie = Mobilite::find($mobilitieId);
+        $mobilitie = Mobilite::find($id);
 
         // Check if the publication exists
         if ($mobilitie) {
@@ -77,65 +92,10 @@ new class extends Component {
         }
     }
 
-    public function editMobilite(Mobilite $mobilite)
-    {
-        $this->labo_accueil = $mobilite->labo_accueil;
-        $this->type = $mobilite->type;
-        $this->ville = $mobilite->ville;
-        $this->pays = $mobilite->pays;
-        $this->file = $mobilite->file;
-        $this->date_debut = $mobilite->date_debut;
-        $this->date_fin = $mobilite->date_fin;
-        $this->editingMobilite = $mobilite;
-        $this->file_name = $mobilite->file_name;
-        $this->editModalOpen = true; // Open the modal
 
-    }
 
-    public function updateMobilite()
-    {
 
-        // dd($this->file);
-        // Validate and update the mobilite
-        $validated = $this->validate([
-            'labo_accueil' => 'nullable:string',
-            'type' => 'nullable|in:nationale,internationale',
-            'ville' => 'nullable:string',
-            'pays' => 'nullable:string',
-            'file' => 'nullable|string',
-            'file_name' => 'nullable|string',
-            'date_debut' => 'nullable|date',
-            'date_fin' => 'nullable|date|after_or_equal:date_debut',
-        ]);
 
-        // dd($validated);
-
-        $this->editingMobilite->update($validated);
-
-        // Close the modal and refresh the list
-        $this->editModalOpen = false;
-        $this->mobilites();
-    }
-
-    public function closeEditModal()
-    {
-        $this->editModalOpen = false;
-        $this->editingMobilite = null; // Clear the editing mobilite
-    }
-    public function removeFile()
-    {
-        // Clear the file and file name
-        $this->file = null;
-        $this->file_name = null;
-
-        // If editing an existing mobilite, update the database
-        if ($this->editingMobilite) {
-            $this->editingMobilite->update([
-                'file' => null,
-                'file_name' => null,
-            ]);
-        }
-    }
 
     public function validateMobilite($mobiliteId)
     {
@@ -144,7 +104,7 @@ new class extends Component {
         $etat = $mobilite->isValidated;
 
         if ($mobilite) {
-            $mobilite->update(['isValidated' => !$etat]);
+            $mobilite->update(['isValidated' => !$etat,'date_validation'=>now()]);
             $this->mobilites(); // Refresh the list
         }
     }
@@ -155,83 +115,122 @@ new class extends Component {
 
         $this->redirect(route('show', ['user' => $user]), navigate: true);
     }
+
+    #[On('view')]
+    public function modifier($id){
+        $mobilite = Mobilite::find($id);
+        $this->redirect(route('mobilite-edit', ['mobilite' => $mobilite]), navigate: true);
+    }
 };
 ?>
 
-<div >
-    @if($mobilites->isNotEmpty())
-        <div>
-        @if ($viewingFileUrl)
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <button class="mb-4 px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out" 
-                    wire:click="$set('viewingFileUrl', null)">
-                    <i class="fas fa-arrow-left"></i> Retour
-                </button>
-                @livewire('pdf.pdfviewer', ['fileUrl' => $viewingFileUrl])
-            </div>
-        @else
+<div x-data="{
+    isTabableMobilite: localStorage.getItem('isTabableMobilite') === 'true',
+    toggleDisplay() {
+        this.isTabableMobilite = !this.isTabableMobilite;
+        localStorage.setItem('isTabableMobilite', this.isTabableMobilite);
+    }
+}"
+    class="relative">
 
-        <!-- moibilites list -->
-        <div class="grid grid-cols-2 gap-6">
-            @foreach ($mobilites->take($visibleCount) as $mobilite)
-                <div class="card bg-white shadow-lg rounded-lg p-5 hover:shadow-xl z-0 transition duration-200 relative">
+    <!-- Toggle Button -->
+    <button @click="toggleDisplay"
+        class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center space-x-2 text-sm z-50">
+        <!-- Icon and Text -->
+        <span x-show="!isTabableMobilite">
+            <i class="fas fa-th-large"></i> <!-- Grid Icon -->
+        </span>
+        <span x-show="isTabableMobilite">
+            <i class="fas fa-table"></i> <!-- Table Icon -->
+        </span>
+        <span x-text="isTabableMobilite ? 'Table' : 'Grille'"></span>
+    </button>
+
+
+    <div x-show="!isTabableMobilite"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform scale-100"
+        x-transition:leave-end="opacity-0 transform scale-95"
+        class="mt-4">
+
+
+        @if($mobilites->isNotEmpty())
+        <div>
+
+
+            <!-- moibilites list -->
+            <div class="grid grid-cols-2 gap-6">
+                @foreach ($mobilites->take($visibleCount) as $mobilite)
+                <div
+                    class="card bg-white shadow-lg rounded-lg p-5 hover:shadow-xl z-0 transition duration-200 relative">
                     <!-- Status and Actions -->
-                    
+
                     <div class="flex justify-center mb-4">
                         <!-- Status Badge -->
                         <div class="flex items-center space-x-2 absolute top-2 left-2">
                             @if ($mobilite->isValidated == 1)
-                                <span class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full  transition duration-150 ">
-                                    <i class="fas fa-check"></i> Demande acceptée
-                                </span>
+                            <span
+                                class="bg-green-200 text-green-600 text-xs px-2 py-1 rounded-full  transition duration-150 ">
+                                <i class="fas fa-check"></i> Demande acceptée
+                            </span>
                             @else
-                                <span class="bg-yellow-200 text-yellow-600 text-xs px-2 py-1 rounded-full  transition duration-150 ">
-                                    <i class="fas fa-clock"></i> Demande en attente
-                                </span>
+                            <span
+                                class="bg-yellow-200 text-yellow-600 text-xs px-2 py-1 rounded-full  transition duration-150 ">
+                                <i class="fas fa-clock"></i> Demande en attente
+                            </span>
                             @endif
                         </div>
-            
+
                         <!-- Actions (Edit, Delete, Validate/Reject) -->
                         <div class="absolute top-2 right-2 flex space-x-2">
                             <!-- Edit Icon -->
-                            <button wire:click="editMobilite({{ $mobilite->id }})" class="text-blue-500 hover:text-blue-600 transition duration-150">
+                            <button wire:click="modifier({{ $mobilite->id }})"
+                                class="text-blue-500 hover:text-blue-600 transition duration-150">
                                 <i class="fas fa-edit"></i>
                             </button>
-            
+
                             <!-- Delete Icon -->
-                            <button onclick="confirmDeletion({{ $mobilite->id }})" class="text-red-500 hover:text-red-600 transition duration-150">
+                            <button onclick="confirmDeletion({{ $mobilite->id }})"
+                                class="text-red-500 hover:text-red-600 transition duration-150">
                                 <i class="fas fa-trash"></i>
                             </button>
-            
+
                             @if(auth()->user()->hasRole('admin'))
                             <!-- Validate/Reject Button -->
                             @if ($mobilite->isValidated == 1)
-                                <button wire:click="validateMobilite({{ $mobilite->id }})" class="btn btn-xs bg-red-500 border-none text-white hover:bg-red-600">
-                                    <i class="fas fa-times"></i>
-                                    Rejeter
-                                </button>
+                            <button wire:click="validateMobilite({{ $mobilite->id }})"
+                                class="btn btn-xs bg-red-500 border-none text-white hover:bg-red-600">
+                                <i class="fas fa-times"></i>
+                                Rejeter
+                            </button>
                             @else
-                                <button wire:click="validateMobilite({{ $mobilite->id }})" class="btn btn-xs bg-green-500 border-none text-white hover:bg-green-600">
-                                    <i class="fas fa-check"></i>
-                                    Valider
-                                </button>
+                            <button wire:click="validateMobilite({{ $mobilite->id }})"
+                                class="btn btn-xs bg-green-500 border-none text-white hover:bg-green-600">
+                                <i class="fas fa-check"></i>
+                                Valider
+                            </button>
                             @endif
                             @endif
                         </div>
                     </div>
-                    
-            
+
+
                     <!-- Content -->
                     <div class="space-y-4">
                         <!-- Labo d'accueil -->
                         <div class="mb-2">
                             <!-- Label for Labo d'accueil -->
-                            <span class="text-sm text-gray-500 font-medium uppercase tracking-wider">Labo d'accueil</span>
+                            <span class="text-sm text-gray-500 font-medium uppercase tracking-wider">Labo
+                                d'accueil</span>
                             :
                             <!-- Labo d'accueil Name -->
-                            <span class="font-bold text-lg bg-gray-200 px-4 py-1 rounded text-gray-800 mt-1">{{ $mobilite->labo_accueil }}</span>
+                            <span class="font-bold text-lg bg-gray-200 px-4 py-1 rounded text-gray-800 mt-1">{{
+                                $mobilite->labo_accueil }}</span>
                         </div>
-                    
+
                         <div class="flex gap-4">
                             <!-- Section 1 -->
                             <div class="flex-1 space-y-2">
@@ -239,7 +238,7 @@ new class extends Component {
                                 <div class="text-sm text-gray-600">
                                     <span class="font-semibold">Type :</span> {{ ucfirst($mobilite->type) }}
                                 </div>
-                    
+
                                 <!-- Date de début -->
                                 <div class="text-sm text-gray-600">
                                     <span class="font-semibold">Date de début :</span>
@@ -248,23 +247,23 @@ new class extends Component {
                                         {{ \Carbon\Carbon::parse($mobilite->date_debut)->format('d/m/Y') }}
                                     </span>
                                 </div>
-                    
-                                
+
+
                             </div>
-                    
+
                             <!-- Section 2 -->
                             <div class="flex-1 space-y-2">
                                 <!-- Ville ou Pays selon le type -->
                                 @if ($mobilite->type === 'nationale')
-                                    <div class="text-sm text-gray-600">
-                                        <span class="font-semibold">Ville :</span> {{ $mobilite->ville }}
-                                    </div>
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-semibold">Ville :</span> {{ $mobilite->ville }}
+                                </div>
                                 @elseif ($mobilite->type === 'internationale')
-                                    <div class="text-sm text-gray-600">
-                                        <span class="font-semibold">Pays :</span> {{ $mobilite->pays }}
-                                    </div>
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-semibold">Pays :</span> {{ $mobilite->pays }}
+                                </div>
                                 @endif
-                    
+
                                 <!-- Date de fin -->
                                 <div class="text-sm text-gray-600">
                                     <span class="font-semibold">Date de fin :</span>
@@ -273,40 +272,42 @@ new class extends Component {
                                         {{ \Carbon\Carbon::parse($mobilite->date_fin)->format('d/m/Y') }}
                                     </span>
                                 </div>
-                    
+
                                 <!-- Durée -->
                                 <div class="text-sm text-gray-600">
                                     <span class="font-semibold">Durée :</span>
-                                    {{ \Carbon\Carbon::parse($mobilite->date_debut)->diffInDays(\Carbon\Carbon::parse($mobilite->date_fin)) }} jours
+                                    {{
+                                    \Carbon\Carbon::parse($mobilite->date_debut)->diffInDays(\Carbon\Carbon::parse($mobilite->date_fin))
+                                    }} jours
                                 </div>
                             </div>
                         </div>
                     </div>
-            
+
                     <!-- File Section -->
                     <div class="mt-4 space-y-3">
                         @if ($mobilite->file)
-                            <div class="relative">
-                                <!-- Badge for "Consulter" -->
-                                <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition duration-150 cursor-pointer"
-                                    wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $mobilite->file)) }}')">
-                                    <i class="fas fa-eye"></i>
-                                </div>
-            
-                                <!-- File Name -->
-                                <div class="bg-gray-100 p-3 rounded-lg border border-gray-200">
-                                    <p class="text-xs text-gray-600 truncate">
-                                        Rapport : {{ $mobilite->file_name }}
-                                    </p>
-                                </div>
+                        <div class="relative">
+                            <!-- Badge for "Consulter" -->
+                            <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full hover:bg-blue-600 transition duration-150 cursor-pointer"
+                                wire:click.prevent="viewFile('{{ asset('storage/' . str_replace('public/', '', $mobilite->file)) }}')">
+                                <i class="fas fa-eye"></i>
                             </div>
+
+                            <!-- File Name -->
+                            <div class="bg-gray-100 p-3 rounded-lg border border-gray-200">
+                                <p class="text-xs text-gray-600 truncate">
+                                    Rapport : {{ $mobilite->file_name }}
+                                </p>
+                            </div>
+                        </div>
                         @else
-                            <p class="text-xs text-red-600">
-                                <span class="flex items-center space-x-1 bg-red-100 px-3 py-1 rounded-full w-fit">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Rapport manquant</span>
-                                </span>
-                            </p>
+                        <p class="text-xs text-red-600">
+                            <span class="flex items-center space-x-1 bg-red-100 px-3 py-1 rounded-full w-fit">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Rapport manquant</span>
+                            </span>
+                        </p>
                         @endif
                     </div>
                     <!-- Créé -->
@@ -314,132 +315,81 @@ new class extends Component {
                         <div class="float-right text-[10px]">
 
                             <span class="font-semibold">Créé :</span>
-                            
+
                             {{ $mobilite->created_at->locale('fr')->diffForHumans() }}
                         </div>
 
                         @if(auth()->user()->hasRole('admin'))
                         <div class="float-start text-[10px]">
-                        <span class="font-semibold">Demandé par :</span>
-                            <span wire:click.prevent="viewProfile({{ $mobilite->user->id }})" class="text-blue-500 hover:text-blue-700 cursor-pointer">{{ $mobilite->user->name }}</span>
+                            <span class="font-semibold">Demandé par :</span>
+                            <span wire:click.prevent="viewProfile({{ $mobilite->user->id }})"
+                                class="text-blue-500 hover:text-blue-700 cursor-pointer">{{ $mobilite->user->name
+                                }}</span>
                         </div>
                         @endif
                     </div>
                 </div>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
 
-    
 
-        <!-- Show More Button -->
-        @if ($mobilites->count() > $visibleCount)
+
+            <!-- Show More Button -->
+            @if ($mobilites->count() > $visibleCount)
             <div class="text-center mt-6">
-                <x-secondary-button type="button" wire:click="loadMore" wire:loading.attr="disabled" wire:target="loadMore">
-                    <span wire:loading.remove wire:target="loadMore">{{ __('Plus') }}</span>
-                    <x-mary-loading class="loading-bars" wire:loading wire:target="loadMore">
+                <x-secondary-button type="button"
+                    wire:click="loadMore"
+                    wire:loading.attr="disabled"
+                    wire:target="loadMore">
+                    <span wire:loading.remove
+                        wire:target="loadMore">{{ __('Plus') }}</span>
+                    <x-mary-loading class="loading-bars"
+                        wire:loading
+                        wire:target="loadMore">
                     </x-mary-loading>
                 </x-secondary-button>
             </div>
+            @endif
+
+            <!-- Edit Modal -->
+            <!-- Edit Modal -->
+
+
+        </div>
+        @else
+        <div class="text-center mt-6 h-full w-full border p-10 bg-white rounded-lg shadow-lg max-w-2xl">
+            <div class="text-gray-500 text-lg">
+                <i class="fas fa-box-open text-4xl mb-4"></i>
+                <span class="block text-2xl">
+                    Aucune mobilité disponible
+                </span>
+            </div>
+        </div>
         @endif
-    @endif
-
-    <!-- Edit Modal -->
-    <!-- Edit Modal -->
-    @if ($editModalOpen)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h2 class="text-xl font-bold mb-4">Modifier la Mobilité</h2>
-            <form wire:submit.prevent="updateMobilite">
-                <!-- Labo d'accueil -->
-                <div class="mb-4">
-                    <label for="labo_accueil" class="block text-sm font-medium text-gray-700">Labo d'accueil</label>
-                    <input type="text" wire:model="labo_accueil" id="labo_accueil" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                </div>
-
-                <div x-data="{ type: '{{ $type }}' }">
-                    <!-- Type -->
-                    <div class="mb-4">
-                        <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
-                        <select x-model="type" wire:model="type" id="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="nationale">Nationale</option>
-                            <option value="internationale">Internationale</option>
-                        </select>
-                    </div>
-                
-                    <!-- Ville -->
-                    <div class="mb-4" x-show="type === 'nationale'">
-                        <label for="ville" class="block text-sm font-medium text-gray-700">Ville</label>
-                        <input type="text" wire:model="ville" id="ville" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                
-                    <!-- Pays -->
-                    <div class="mb-4" x-show="type === 'internationale'">
-                        <label for="pays" class="block text-sm font-medium text-gray-700">Pays</label>
-                        <input type="text" wire:model="pays" id="pays" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                
-                    <!-- Date de debut -->
-                    <div class="mb-4">
-                        <label for="date_debut" class="block text-sm font-medium text-gray-700">Date de debut</label>
-                        <input type="date" wire:model="date_debut" id="date_debut" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    @error('date_debut') 
-                        <span class="text-red-500 text-sm">{{ $message }}</span> 
-                    @enderror
-                
-                    <!-- Date de fin -->
-                    <div class="mb-4">
-                        <label for="date_fin" class="block text-sm font-medium text-gray-700">Date de fin</label>
-                        <input type="date" wire:model="date_fin" id="date_fin" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    @error('date_fin') 
-                        <span class="text-red-500 text-sm">{{ $message }}</span> 
-                    @enderror
-                </div>
-
-                <!-- File Section -->
-                @if ($file_name)
-                    <div class="mb-4">
-                        <label for="pays" class="block text-sm font-medium text-gray-700">Rapport de mobilité</label>
-                        <div class="flex items-center space-x-2">
-
-                            <div class="flex items-center justify-between space-x-2 bg-gray-200 w-fit rounded-md px-2 py-1">
-                                <span class="text-sm text-gray-600">{{ $file_name }}</span>
-                                
-                            </div>
-                            <button type="button" wire:click="removeFile" class="text-red-500 hover:text-red-600">
-                                <i class="fas fa-trash text-gray-500"></i>
-                            </button>
-                        </div>
-                    </div>
-                @else
-                    <!-- Upload New File -->
-                    <div class="mb-4">
-                        <livewire:inputfile label="Rapport de mobilité" :location="'mobilites'" :objet="'mobilites'" />
-                    </div>
-                @endif
-
-                <!-- Buttons -->
-                <div class="flex justify-end space-x-4">
-                    <button type="button" wire:click="closeEditModal" class="px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out">Annuler</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 rounded-md text-white hover:bg-blue-600 transition duration-150 ease-in-out">Enregistrer</button>
-                </div>
-            </form>
-        </div>
     </div>
-    @endif
 
+    <div x-show="isTabableMobilite"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform scale-100"
+        x-transition:leave-end="opacity-0 transform scale-95"
+        class="mt-4">
+
+        <livewire:datatable :data="$mobilites"
+            :columns="$columns"
+            :selectFilters="$selectFilters"
+            :enabledFilters="$enabledFilters"
+            :booleanColumns="$booleanColumns"
+            :actions="[ 'view', 'delete' ]"
+            :enableSearch="true"
+            :columnLabels="$columnLabels" />
     </div>
-    @else
-    <div class="text-center mt-6 h-full w-full border p-10 bg-white rounded-lg shadow-lg max-w-2xl">
-        <div class="text-gray-500 text-lg">
-            <i class="fas fa-box-open text-4xl mb-4"></i> 
-            <span class="block text-2xl">
-                Aucune mobilité disponible
-            </span>
-        </div>
-    </div>
-    @endif
+
+
+
+
 </div>
 
 <script>

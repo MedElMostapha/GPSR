@@ -123,5 +123,6 @@ public function confirmDelete($id)
         :selectFilters="$filterByselect"
         :actions="[ 'delete', 'view']"
         :booleanColumns="$booleanColumns"
+        :enableSearch='true'
         :columnLabels="$columnLabels" />
 </div>

@@ -32,11 +32,11 @@ new class extends Component {
 }
 
 
-    public function viewFile($fileUrl)
-    {
-        $this->viewingFileUrl = $fileUrl;
-
-    }
+public function viewFile($fileUrl)
+{
+// Redirect to the 'pdf' route with the fileUrl parameter
+return $this->redirect(route('pdf', ['fileUrl' => $fileUrl]), navigate: true);
+}
 
     // Obtenir les statistiques des publications par mois
 
@@ -45,17 +45,7 @@ new class extends Component {
 <div class="min-h-screen bg-gray-100 p-4">
     <!-- Carte de profil -->
     <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-6 relative">
-        @if ($viewingFileUrl)
-        <!-- Section de visualisation de fichier -->
-        <div class="bg-white p-6 w-full rounded-lg">
-            <button
-                class="mb-4 px-4 py-2 bg-gray-200 rounded-md text-gray-700 hover:bg-gray-300 transition duration-150 ease-in-out"
-                wire:click="$set('viewingFileUrl', null)">
-                <i class="fas fa-arrow-left"></i> Retour
-            </button>
-            @livewire('pdf.pdfviewer', ['fileUrl' => $viewingFileUrl])
-        </div>
-        @else
+
         <!-- Bouton de retour -->
         <div class="mb-4">
             <button onclick="window.history.back()"
@@ -261,6 +251,5 @@ new class extends Component {
         <hr class="my-6 border-t border-gray-200">
 
 
-        @endif
     </div>
 </div>

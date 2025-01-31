@@ -15,7 +15,7 @@ new class extends Component {
     public $statusFilter = ''; // Store selected status for filtering
     public $searchQuery = ''; // Store search query for filtering
     public $availableYears = []; // Store available years for selection
-    public $columns=['title','journal','publication_date','isPublished' ,'type','prix' ,'isAccepted'];
+    public $columns=['title','journal','publication_date','isPublished' ,'type' ,'isAccepted'];
     public $booleanColumns=['isPublished'=>[
                             'true'=> ['text'=>'Publiée', 'class'=>'bg-green-100 text-green-800'],
                             'false'=>['text'=>'Non publiée', 'class'=>'bg-red-100 text-red-800'],],
@@ -24,15 +24,15 @@ new class extends Component {
                                 'false'=>['text'=>'No validé','class'=>'bg-red-100 text-red-800']
                             ]
                         ];
-
-
     public $columnLabels = [
                         'title' => 'Titre', // Custom label for 'name'
                         'publication_date' => 'Date de publication', // Custom label for 'email'
                         'isPublished' => 'Etat', // Custom label for 'isValidated'
-                        'isAccepted'=>'Acceptations'
+                        'isAccepted'=>'Validation',
 
                         ];
+
+
     protected $listeners = ['deletePublication'];
     public $selectFilters = [
         'publication_date',
@@ -652,7 +652,6 @@ public function confirmDelete($publicationId)
             :booleanColumns="$booleanColumns"
             :selectFilters="$selectFilters"
             :actions="[ 'view', 'delete' ]"
-            :total="10000"
             :enableSearch="true"
             :columnLabels="$columnLabels" />
     </div>

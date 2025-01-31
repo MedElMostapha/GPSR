@@ -24,6 +24,8 @@ class CreateMobilitesTable extends Migration
             $table->boolean('isValidated')->default(false); // Statut de validation, par défaut 'false'
             $table->date('date_debut'); // Date de debut de la mobilité
             $table->date('date_fin'); // Date de fin de la mobilité
+            $table->date('date_validation')->nullable(); // Date de validation, si applicable
+            $table->date('date_creation')->nullable(); // Date de validation, si applicable
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             $table->timestamps(); // Création des timestamps (created_at, updated_at)

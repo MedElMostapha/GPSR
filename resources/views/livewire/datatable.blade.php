@@ -29,7 +29,7 @@ new class extends Component {
     public bool $enableSearch = false;
     public bool $pdfEnabled = false;
     public bool $excelEnabled = false;
-    public int $total;
+    public int $total=0;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -498,7 +498,7 @@ new class extends Component {
             </tbody>
 
             <!-- Table Footer for Total -->
-            @if (isset($total))
+            @if ($total > 0)
             <tfoot>
                 <tr class="bg-gray-100">
                     <td colspan="{{ count($columns) + count($actions) }}"

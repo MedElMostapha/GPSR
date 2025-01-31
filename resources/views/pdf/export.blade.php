@@ -33,11 +33,25 @@
             text-align: right;
             margin-top: 20px;
         }
+
+        .logo img {
+            width: 150px;
+            height: auto;
+        }
+
+        .logo {
+            text-align: center;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Exported Data</h1>
+
+    <div class="logo">
+        <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo.png')))}}"
+            alt="Logo">
+    </div>
+
     <table>
         <thead>
             <tr>
@@ -67,7 +81,7 @@
         </tbody>
     </table>
 
-    @if(isset($total))
+    @if($total > 0)
     <div class="total">
         Total: {{ $total }}
     </div>
