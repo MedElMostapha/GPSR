@@ -102,6 +102,12 @@ new class extends Component {
 
 <div class="p-4 relative"
     x-data="{ type: 'nationale' }">
+    <a href="{{ route('mobilite') }}"
+        wire:navigate
+        class="text-blue-500 hover:text-blue-700">
+        <i class="fas fa-arrow-left mr-2"></i>
+        {{ __('Retour') }}
+    </a>
     <!-- Initialiser avec 'nationale' par défaut -->
     <h1 class="text-2xl font-bold mb-4">{{__('Modifier et visualiser une mobilité')}}</h1>
 
