@@ -57,6 +57,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Mobilite::class);
     }
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class);
+    }
 
     protected static function boot()
     {
@@ -73,5 +77,4 @@ class User extends Authenticatable
             // If there are other relationships, delete them here
         });
     }
-
 }

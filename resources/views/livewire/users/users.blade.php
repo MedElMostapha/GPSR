@@ -14,7 +14,6 @@ new class extends Component {
         'roles' => 'Fonction', // Custom label for 'roles'
     ];
     public $filterautorizee = [
-            'name',
             'isValidated'
 
     ];

@@ -29,7 +29,8 @@ new class extends Component {
     public bool $enableSearch = false;
     public bool $pdfEnabled = false;
     public bool $excelEnabled = false;
-    public int $total=0;
+    public int $total = 0;
+    public array $staticTexts = [];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -38,7 +39,7 @@ new class extends Component {
         'perPage' => ['except' => 10],
     ];
 
-    public function mount(array $columns, Collection $data, array $actions = [], array $columnLabels = [], array $booleanColumns = [], array $enabledFilters = [], array $selectFilters = []): void
+    public function mount(array $columns, Collection $data, array $actions = [], array $columnLabels = [], array $booleanColumns = [], array $enabledFilters = [], array $selectFilters = [], array $staticTexts = []): void
     {
         $this->columns = $columns;
         $this->data = $data;
@@ -47,6 +48,7 @@ new class extends Component {
         $this->booleanColumns = $booleanColumns;
         $this->enabledFilters = $enabledFilters;
         $this->selectFilters = $selectFilters;
+        $this->staticTexts = $staticTexts;
     }
 
     #[On('reload')]
@@ -112,30 +114,22 @@ new class extends Component {
                     return true;
                 });
             })
-           ->when($this->selectedYears, function ($collection) {
-            return $collection->filter(function ($item) {
-            $selectedYears = (array) $this->selectedYears;
+            ->when($this->selectedYears, function ($collection) {
+                return $collection->filter(function ($item) {
+                    $selectedYears = (array) $this->selectedYears;
 
-            $data=$item->toArray();
+                    $data = $item->toArray();
 
-            // Loop through the $item object
-            foreach ($data as $key => $value) {
+                    foreach ($data as $key => $value) {
+                        if (is_string($value) && strtotime($value) !== false) {
+                            if (in_array($value, $selectedYears)) {
+                                return true;
+                            }
+                        }
+                    }
 
-            // dd($key,$value);
-            // Check if the value is a date (you may need to adjust this condition based on your date format)
-            if (is_string($value) && strtotime($value) !== false) {
-
-            // Extract the year from the date
-            // Check if the year is in the selectedYears array
-            if (in_array($value, $selectedYears)) {
-            return true;
-            }
-            }
-            }
-
-            // If no date attribute matches the selected years, filter out the item
-            return false;
-            });
+                    return false;
+                });
             })
             ->map(function ($item) {
                 if (isset($item['roles']) && (is_array($item['roles']) || is_object($item['roles']))) {
@@ -159,21 +153,21 @@ new class extends Component {
     }
 
     public function exportPdf()
-{
-    $filteredData = $this->rows()->getCollection();
+    {
+        $filteredData = $this->rows()->getCollection();
 
-    $pdf = Pdf::loadView('pdf.export', [
-        'data' => $filteredData,
-        'columns' => $this->columns,
-        'columnLabels' => $this->columnLabels,
-        'booleanColumns' => $this->booleanColumns,
-        'total' => $this->total // Pass the total to the PDF template
-    ]);
+        $pdf = Pdf::loadView('pdf.export', [
+            'data' => $filteredData,
+            'columns' => $this->columns,
+            'columnLabels' => $this->columnLabels,
+            'booleanColumns' => $this->booleanColumns,
+            'total' => $this->total
+        ]);
 
-    return response()->streamDownload(function () use ($pdf) {
-        echo $pdf->stream();
-    }, 'export.pdf');
-}
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'export.pdf');
+    }
 
     public function emitAction(string $action, $id): void
     {
@@ -244,7 +238,6 @@ new class extends Component {
     <!-- Other UI elements -->
 
 
-
     <!-- Rest of your UI -->
     @if(!empty($selectedYears))
     @foreach ($selectedYears as $year)
@@ -259,16 +252,13 @@ new class extends Component {
     @endif
 
     @if ($this->enableSearch)
-
     <!-- Search Input -->
     <div class="mb-6 w-full relative ">
         <div class="flex justify-end">
-
             <input type="text"
                 wire:model.change="search"
                 placeholder="Search..."
                 class="max-w-[40%] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10" />
-
             <!-- Clear Button -->
             @if($search)
             <button wire:click="$set('search', '')"
@@ -302,7 +292,6 @@ new class extends Component {
                 <option value="{{ $key == 'true' ? 1 : 0 }}">{{ $details['text'] }}</option>
                 @endforeach
             </select>
-
             @elseif(isset($this->selectFilters[$column]))
             <select wire:model.change="filterAttributes.{{ $column }}"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -312,7 +301,6 @@ new class extends Component {
                 @endforeach
             </select>
             @elseif(strpos($column, 'date') !== false)
-
             <div id="dropdown-{{ $column }}"
                 x-data="{ open: false }"
                 class="flex-1 sm:flex-none">
@@ -329,7 +317,6 @@ new class extends Component {
                         </span>
                         <i class="fas fa-chevron-down ml-2"></i>
                     </button>
-
                     <!-- Dropdown Menu -->
                     <div x-show="open"
                         @click.away="open = false"
@@ -338,9 +325,7 @@ new class extends Component {
                             @if(!empty($this->getUniqueYears($column)))
                             @foreach ($this->getUniqueYears($column) as $year)
                             @if (!empty($year))
-
                             <label class="flex items-center px-4 py-2 hover:bg-gray-100">
-
                                 <input type="checkbox"
                                     wire:model.change="selectedYears"
                                     value="{{ $year }}"
@@ -367,8 +352,8 @@ new class extends Component {
         @endforeach
     </div>
 
-    <div class="flex items-center gap-4">
 
+    <div class="flex items-center gap-4">
         <div>
             @if(!empty($enabledFilters))
             <!-- Clear Filters Button -->
@@ -380,13 +365,9 @@ new class extends Component {
             </div>
             @endif
         </div>
-
         <div>
-
             @if ($pdfEnabled)
-
             <div class="mb-6 ">
-
                 <!-- Add the PDF export button -->
                 <button wire:click="exportPdf"
                     class="btn btn-xs bg-blue-500 text-white rounded-md border-none hover:bg-blue-600">
@@ -394,13 +375,9 @@ new class extends Component {
                 </button>
             </div>
             @endif
-
         </div>
-
         <div>
-
             @if ($excelEnabled)
-
             <!-- Excel Export Button -->
             <div class="mb-6">
                 <button wire:click="exportExcel"
@@ -410,126 +387,169 @@ new class extends Component {
             </div>
             @endif
         </div>
-
     </div>
-
-
-
 
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-            <thead class="bg-gray-50">
-                <tr>
-                    @foreach($columns as $column)
-                    <th wire:click="sortBy('{{ $column }}')"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
-                        <div class="flex items-center">
-                            {{ $this->getColumnLabel($column) }}
-                            <!-- Use custom label -->
-                            @if($sortField === $column)
-                            @if($sortDirection === 'asc')
-                            <svg class="w-4 h-4 ml-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M5 15l7-7 7 7" />
-                            </svg>
-                            @else
-                            <svg class="w-4 h-4 ml-1"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
-                            </svg>
-                            @endif
-                            @endif
-                        </div>
-                    </th>
-                    @endforeach
-                    <!-- Actions Column Header -->
-                    @if(!empty($actions))
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                    </th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @foreach($this->rows() as $row)
-                <tr class="hover:bg-gray-50 transition-colors">
-                    @foreach($columns as $column)
-                    <td class="px-6 py-4 text-sm text-gray-700">
-                        @if(isset($this->booleanColumns[$column]))
-                        @php
-                        $booleanDisplay = $this->getBooleanDisplayText($column, $row[$column]);
-                        @endphp
-                        <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $booleanDisplay['class'] }}">
-                            {{ $booleanDisplay['text'] }}
-                        </span>
-                        @else
-                        {{ $row[$column] }}
+        <!-- Show skeleton while loading -->
+        <div wire:loading>
+            <table class="w-full bg-white border border-gray-200 rounded-lg">
+                <thead class="bg-gray-50">
+                    <tr>
+                        @foreach($columns as $column)
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <div class="w-24 h-5 bg-gray-200 animate-pulse rounded"></div>
+                        </th>
+                        @endforeach
+
+                        @if(!empty($actions))
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <div class="w-24 h-5 bg-gray-200 animate-pulse rounded"></div>
+                        </th>
                         @endif
-                    </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for($i = 0; $i < 5;
+                        $i++)
+                        <tr
+                        class="border-b">
+                        @foreach($columns as $column)
+                        <td class="px-6 py-4">
+                            <div class="w-full h-4 bg-gray-200 animate-pulse rounded"></div>
+                        </td>
+                        @endforeach
+                        @if(!empty($actions))
+                        <td class="px-6 py-4">
+                            <div class="flex space-x-2">
+                                <div class="w-8 h-8 bg-gray-200 animate-pulse rounded"></div>
+                                <div class="w-8 h-8 bg-gray-200 animate-pulse rounded"></div>
+                                <div class="w-8 h-8 bg-gray-200 animate-pulse rounded"></div>
+                            </div>
+                        </td>
+                        @endif
+                        </tr>
+                        @endfor
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Show actual table when loading is complete -->
+        <div wire:loading.remove>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead class="bg-gray-50">
+                    <tr>
+                        @foreach($columns as $column)
+                        <th wire:click="sortBy('{{ $column }}')"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+                            <div class="flex items-center">
+                                {{ $this->getColumnLabel($column) }}
+                                @if($sortField === $column)
+                                @if($sortDirection === 'asc')
+                                <svg class="w-4 h-4 ml-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M5 15l7-7 7 7" />
+                                </svg>
+                                @else
+                                <svg class="w-4 h-4 ml-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                                @endif
+                                @endif
+                            </div>
+                        </th>
+                        @endforeach
+
+                        @if(!empty($actions))
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @foreach($this->rows() as $row)
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        @foreach($columns as $column)
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            @if(isset($this->booleanColumns[$column]))
+                            @php
+                            $booleanDisplay = $this->getBooleanDisplayText($column, $row[$column]);
+                            @endphp
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $booleanDisplay['class'] }}">
+                                {{ $booleanDisplay['text'] }}
+                            </span>
+                            @else
+                            {{ $row[$column] }}
+                            @if(isset($this->staticTexts[$column]))
+                            {{ $this->staticTexts[$column] }}
+                            @endif
+                            @endif
+                        </td>
+                        @endforeach
+                        @if(!empty($actions))
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                            <div class="flex space-x-2">
+                                @if(in_array('edit', $actions))
+                                <button wire:click="emitAction('edit', {{ $row['id'] }})"
+                                    class="btn-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                @endif
+                                @if(in_array('delete', $actions))
+                                <button wire:click="emitAction('delete', {{ $row['id'] }})"
+                                    class="btn-xs bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                @endif
+                                @if(in_array('view', $actions))
+                                <button wire:click="emitAction('view', {{ $row['id'] }})"
+                                    class="btn-xs bg-blue-400 text-white rounded-lg hover:bg-blue-500">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                @endif
+                            </div>
+                        </td>
+                        @endif
+                    </tr>
                     @endforeach
-                    <!-- Actions Column -->
-                    @if(!empty($actions))
-                    <td class="px-6 py-4 text-sm text-gray-700">
-                        <div class="flex space-x-2">
-                            @if(in_array('edit', $actions))
-                            <button wire:click="emitAction('edit', {{ $row['id'] }})"
-                                class="btn-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            @endif
-                            @if(in_array('delete', $actions))
-                            <button wire:click="emitAction('delete', {{ $row['id'] }})"
-                                class="btn-xs bg-red-500 text-white rounded-lg hover:bg-red-600">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            @endif
-                            @if(in_array('view', $actions))
-                            <button wire:click="emitAction('view', {{ $row['id'] }})"
-                                class="btn-xs bg-blue-400 text-white rounded-lg hover:bg-blue-500">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            @endif
-                        </div>
-                    </td>
+
+                    @if(count($this->rows()) === 0)
+                    <tr>
+                        <td colspan="{{ count($columns) + count($actions) }}"
+                            class="px-6 py-4 text-sm text-gray-700 text-center">
+                            Aucun donnée disponible
+                        </td>
+                    </tr>
                     @endif
-                </tr>
-                @endforeach
+                </tbody>
 
-                @if(count($this->rows()) === 0)
-                <tr>
-                    <td colspan="{{ count($columns) + count($actions) }}"
-                        class="px-6 py-4 text-sm text-gray-700 text-center">
-                        Aucun donnée disponible
-                    </td>
-                </tr>
+                @if ($total > 0)
+                <tfoot>
+                    <tr class="bg-gray-100">
+                        <td colspan="{{ count($columns) + count($actions) }}"
+                            class="px-6 py-4 text-sm font-bold text-gray-700 text-center">
+                            Total: {{ $total }} MRO
+                        </td>
+                    </tr>
+                </tfoot>
                 @endif
-            </tbody>
-
-            <!-- Table Footer for Total -->
-            @if ($total > 0)
-            <tfoot>
-                <tr class="bg-gray-100">
-                    <td colspan="{{ count($columns) + count($actions) }}"
-                        class="px-6 py-4 text-sm font-bold text-gray-700 text-center">
-                        Total: {{ $total }}
-                    </td>
-                </tr>
-            </tfoot>
-            @endif
-        </table>
+            </table>
+        </div>
     </div>
+
 
     <!-- Pagination -->
     <div class="mt-6">

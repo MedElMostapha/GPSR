@@ -31,6 +31,12 @@ Route::view('pdf', 'pdf')
     ->middleware(['auth', 'verified'])
     ->name('pdf');
 
+Route::view('paiement', 'paiement')
+    ->middleware(['auth', 'verified'])
+    ->name('paiement');
+
+
+
 Route::view('archive', 'archive')
     ->middleware(['auth', 'verified'])
     ->name('archive');

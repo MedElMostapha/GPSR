@@ -117,9 +117,21 @@ new class extends Component
 
     public function valider($publicationId){
         $publication = Publication::find($publicationId);
+        $user = $publication->user;
         $publication->isAccepted = true;
         $publication->save();
+
+        if ($publication->isAccepted == true) {
+
+            $publication->paiement()->create([
+                'user_id' => $user->id,
+                'name' => $publication->title,
+                'montant' => $publication->prix
+            ]);
+        }
         $this->publication=$publication;
+
+
     }
 
     public function refuser(){

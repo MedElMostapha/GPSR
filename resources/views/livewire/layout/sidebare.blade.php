@@ -30,7 +30,7 @@ new class extends Component
         <!-- Logo -->
         <div class="shrink-0 flex items-center justify-center bg-white transition-all duration-300">
             <a href="{{ route('dashboard') }}"
-                wire:navigate>
+               >
                 <x-dash-logo class="block fill-current text-gray-800 transition-all duration-300" />
             </a>
         </div>
@@ -43,7 +43,6 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('dashboard')"
                         :active="request()->routeIs('dashboard')"
-                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-home"></i>
                         <span x-show="open"
@@ -56,7 +55,6 @@ new class extends Component
                     <div class="flex items-center justify-between space-x-5">
                         <x-nav-link :href="route('publication')"
                             :active="request()->routeIs('publication')"
-                            wire:navigate.hover
                             class="flex items-center space-x-2">
                             <i class="fas fa-book"></i>
                             <span x-show="open"
@@ -80,7 +78,6 @@ new class extends Component
                         <li>
                             <x-nav-link :href="route('soumission')"
                                 :active="request()->routeIs('soumission')"
-                                wire:navigate.hover
                                 class="flex items-center space-x-2">
                                 <i class="fa-solid fa-arrow-up-from-bracket"></i>
                                 <span x-show="open"
@@ -96,7 +93,6 @@ new class extends Component
                     <div class="flex items-center justify-between space-x-5">
                         <x-nav-link :href="route('mobilite')"
                             :active="request()->routeIs('mobilite')"
-                            wire:navigate.hover
                             class="flex items-center space-x-2">
                             <i class="fas fa-car"></i>
                             <span x-show="open"
@@ -120,7 +116,6 @@ new class extends Component
                         <li>
                             <x-nav-link :href="route('mobilite-create')"
                                 :active="request()->routeIs('mobilite-create')"
-                                wire:navigate.hover
                                 class="flex items-center space-x-2">
                                 <i class="fa-solid fa-arrow-up-from-bracket"></i>
                                 <span x-show="open"
@@ -137,19 +132,29 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('archive')"
                         :active="request()->routeIs('archive')"
-                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-archive"></i>
                         <span x-show="open"
                             class="transition-all duration-300">{{ __('Archive') }}</span>
                     </x-nav-link>
                 </li>
+                @if (auth()->user()->hasRole('admin'))
+
+                <li>
+                    <x-nav-link :href="route('paiement')"
+                        :active="request()->routeIs('paiement')"
+                        class="flex items-center space-x-2">
+                        <i class="fas fa-credit-card"></i>
+                        <span x-show="open"
+                            class="transition-all duration-300">{{ __('Paiement') }}</span>
+                    </x-nav-link>
+                </li>
+                @endif
 
                 <!-- Profile Link -->
                 <li>
                     <x-nav-link :href="route('profile')"
                         :active="request()->routeIs('profile')"
-                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fas fa-user"></i>
                         <span x-show="open"
@@ -163,7 +168,6 @@ new class extends Component
                 <li>
                     <x-nav-link :href="route('users')"
                         :active="request()->routeIs('users')"
-                        wire:navigate.hover
                         class="flex items-center space-x-2">
                         <i class="fa-solid fa-user-gear"></i>
                         <span x-show="open"

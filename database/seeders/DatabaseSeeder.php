@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use App\Models\Publication;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,5 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminUserSeeder::class,
         ]);
+
+        User::factory(10)->create(); // 10 users will be created with random roles
+        Publication::factory(200)->create();
     }
 }

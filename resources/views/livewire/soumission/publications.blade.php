@@ -29,6 +29,7 @@ new class extends Component {
                         'publication_date' => 'Date de publication', // Custom label for 'email'
                         'isPublished' => 'Etat', // Custom label for 'isValidated'
                         'isAccepted'=>'Validation',
+                        'type'=>'Indexation',
 
                         ];
 
@@ -37,10 +38,12 @@ new class extends Component {
     public $selectFilters = [
         'publication_date',
         'isPublished',
+        'isAccepted'
     ];
     public $enabledFilters = [
         'publication_date',
         'isPublished',
+        'isAccepted'
 
     ];
 
@@ -64,6 +67,8 @@ new class extends Component {
         // Fetch publications with applied filters
         $this->publications();
     }
+
+
 
     public function getAvailableYears()
     {
@@ -109,7 +114,6 @@ new class extends Component {
 
         $this->publications = $query->latest()->get();
 
-        // dd($this->publications);
     }
 
     public function updatedSelectedYears()
@@ -281,6 +285,12 @@ public function confirmDelete($publicationId)
         // Redirect to the 'pdf' route with the fileUrl parameter
         return $this->redirect(route('pdf', ['fileUrl' => $fileUrl]), navigate: true);
     }
+
+    public function viewProfile($userId)
+    {
+        // Use Livewire's redirect method to ensure wire:navigate is used
+        $this->redirect(route('show', $userId), navigate: true);
+    }
 };
 ?>
 
@@ -292,6 +302,7 @@ public function confirmDelete($publicationId)
     }
 }"
     class="relative">
+
 
     <!-- Toggle Button -->
     <button @click="toggleDisplay"
@@ -314,6 +325,7 @@ public function confirmDelete($publicationId)
         x-transition:leave-start="opacity-100 transform scale-100"
         x-transition:leave-end="opacity-0 transform scale-95"
         class="mt-4">
+
 
         <!-- Top Bar with Search -->
         <div class="flex justify-between items-center mb-6">
